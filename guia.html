@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Guia de Remessa</title>
+    <link rel="stylesheet" href="style.css"> 
+</head>
+<body>
+
+    <div class="container">
+        <h1>Nova Guia de Remessa</h1>
+        
+        <form id="form-guia">
+            <div class="form-group">
+                <label for="numeroGuia">Nº Guia de Remessa (Ex: 2073)</label>
+                <input type="number" id="numeroGuia" required>
+            </div>
+
+            <div class="form-group">
+                <label for="unidadeSolicitante">Unidade Solicitante</label>
+                <input type="text" id="unidadeSolicitante" placeholder="Ex: NUARQ, NUPROV" required>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group half">
+                    <label for="dataRecebimento">Data de Recebimento</label>
+                    <input type="date" id="dataRecebimento" required>
+                </div>
+                <div class="form-group half">
+                    <label for="horaRecebimento">Hora de recebimento</label>
+                    <input type="time" id="horaRecebimento" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group half">
+                    <label for="status">Status</label>
+                    <select id="status" required>
+                        <option value="RECEBIDA">RECEBIDA</option>
+                        <option value="ARQUIVADO">ARQUIVADO</option>
+                        <option value="PENDENTE">PENDENTE</option>
+                    </select>
+                </div>
+                <div class="form-group half">
+                    <label for="dataArquivamento">Data de Arquivamento</label>
+                    <input type="date" id="dataArquivamento">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group half">
+                    <label for="caixaLocalizacao">Caixa - Localização</label>
+                    <input type="number" id="caixaLocalizacao">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="observacao">Observação</label>
+                <textarea id="observacao" rows="3"></textarea>
+            </div>
+
+            <button type="submit" class="btn-submit">Salvar Guia</button>
+        </form>
+        
+        <p id="mensagem" style="display:none; color: green; margin-top: 10px;"></p>
+    </div>
+
+    <script type="module" src="guia.js"></script>
+</body>
+</html>
