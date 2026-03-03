@@ -12,7 +12,7 @@
             <div style="background-color: #003366; color: white; padding: 15px; margin: -25px -25px 30px -25px; border-radius: 8px 8px 0 0; font-weight: bold;">SISTEMA DE PROCESSOS NUDOF</div>
             <h2 style="margin-bottom: 20px;">Acesso Restrito</h2>
             <button id="btnGoogle" class="btn-primary" style="background-color: #4285F4; width: 100%;">🌐 Entrar com Google</button>
-            <p id="erroMsg" style="color: #e74c3c; margin-top: 10px;"></p>
+            <p id="erroMsg" style="color: #e74c3c; margin-top: 15px; font-weight: bold;"></p>
         </div>
     </div>
 
@@ -44,20 +44,27 @@
         import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
         onAuthStateChanged(auth, (user) => {
-            if (user && user.email.endsWith("@defensoria.rj.def.br")) {
+            // 🚨 CORREÇÃO 1: Removi a restrição "@defensoria.rj.def.br" temporariamente
+            if (user) {
                 document.getElementById("loginSection").style.display = "none";
                 document.getElementById("appInterface").style.display = "flex";
                 carregarHistorico();
             } else {
-                if(user) signOut(auth);
                 document.getElementById("loginSection").style.display = "block";
                 document.getElementById("appInterface").style.display = "none";
             }
         });
 
         document.getElementById("btnGoogle").onclick = () => {
-            signInWithPopup(auth, new GoogleAuthProvider()).catch(() => document.getElementById("erroMsg").innerText = "Erro ao autenticar.");
+            document.getElementById("erroMsg").innerText = "A iniciar o Google..."; 
+            
+            signInWithPopup(auth, new GoogleAuthProvider()).catch((error) => {
+                // 🚨 CORREÇÃO 2: Mostra o erro exato que o Firebase está a devolver
+                console.error("ERRO DO FIREBASE:", error);
+                document.getElementById("erroMsg").innerText = "Erro Firebase: " + error.code;
+            });
         };
+
         document.getElementById("btnLogout").onclick = () => signOut(auth);
 
         async function carregarHistorico() {
