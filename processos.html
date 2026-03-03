@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inserir Processos - NUDOF</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .data-header-btn { width: 100%; background: #003366; color: white; padding: 12px; border: none; border-radius: 5px; text-align: left; font-weight: bold; margin: 15px 0 5px 0; cursor: pointer; }
+        .btn-guia-item { padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; background: #4682B4; color: white; cursor: pointer; font-weight: bold; }
+        .badge-docs { background: #27ae60; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8em; margin-left: 8px;}
+    </style>
+</head>
+<body>
+    <div id="appInterface">
+        <aside id="sidebar">
+            <div class="sidebar-logo">CONTROLE DE PROCESSOS NUDOF</div>
+            <nav>
+                <a href="index.html">🏠 Início / Histórico</a>
+                <a href="guia.html">➕ Nova Guia</a>
+                <a href="processos.html" class="ativo">📄 Inserir Processos</a>
+                <a href="digitalizacao.html">🖨️ Digitalização e SEI</a>
+                <a href="arquivamento.html">🗄️ Arquivar Físico</a>
+                <a href="acervo.html">📚 Consulta de Acervo</a>
+                <button id="btnLogout" class="btn-sair">🚪 Sair do Sistema</button>
+            </nav>
+        </aside>
+
+        <main id="content">
+            <h2 class="page-title">Cadastro de Processo Físico</h2>
+            
+            <div class="form-container" id="containerListaGuias">
+                <h3>1. Selecione a Guia de Destino</h3>
+                <div id="listaGuias" style="margin-top: 15px; display: flex; flex-wrap: wrap;"><p>Buscando guias abertas...</p></div>
+            </div>
+
+            <div id="areaProcessos" style="display:none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #ccc; padding-top: 20px; margin-bottom: 15px;">
+                    <h3 id="tituloGuia" style="color: #003366; margin: 0;"></h3>
+                    <button type="button" onclick="window.fecharArea()" style="background: #7f8c8d; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">❌ Fechar Guia</button>
+                </div>
+
+                <div class="form-container">
+                    <form id="formProcesso">
+                        <label>Nº do Processo Físico:</label>
+                        <input type="text" id="numeroProcessoFisico" placeholder="Ex: 0000000-00.2026.8.19.0000" required>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div>
+                                <label>Data de Abertura do Processo:</label>
+                                <input type="date" id="dataAbertura" required>
+                            </div>
+                            <div>
+                                <label>Data de Recebimento:</label>
+                                <input type="date" id="dataRecebimentoProc" required>
+                            </div>
+                        </div>
+
+                        <label>Assunto (Capa):</label>
+                        <input type="text" id="assunto" placeholder="Ex: Execução de Alimentos" required>
+
+                        <label>Interessado:</label>
+                        <input type="text" id="interessado" placeholder="Nome da parte interessada" required>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div>
+                                <label>Quantidade de Folhas Físicas:</label>
+                                <input type="number" id="qtdFolhas" required>
+                            </div>
+                            <div>
+                                <label>Tipo de Processo no SEI:</label>
+                                <input type="text" id="tipoProcessoSei" placeholder="Ex: Administrativo / Judicial" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-primary" id="btnSalvar">Gravar Processo na Guia</button>
+                    </form>
+                </div>
+
+                <div class="form-container">
+                    <h3>Processos cadastrados nesta guia:</h3>
+                    <ul id="listaProcessosUI" class="sei-table" style="list-style: none; padding: 0; margin-top: 10px;"></ul>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { db, auth } from "./firebase.js";
+        import { collection, getDocs, addDoc, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+
+        let guiaAtivaId = "";
+
+        onAuthStateChanged(auth, (user) => { if (!user) window.location.href = "index.html"; else carregarGuias(); });
+        document.getElementById("btnLogout").onclick = () => signOut(auth);
+
+        async function carregarGuias() {
+            const lista = document.getElementById("listaGuias");
+            try {
+                const q = query(collection(db, "guias_processos"), where("status", "==", "Aberta"));
+                const snap = await getDocs(q);
+                lista.innerHTML = "";
+                
+                if (snap.empty) { lista.innerHTML = "<p>Não há guias abertas.</p>"; return; }
+
+                for (const d of snap.docs) {
+                    const g = d.data();
+                    const subSnap = await getDocs(collection(db, "guias_processos", d.id, "processos"));
+                    
+                    const btn = document.createElement("button");
+                    btn.className = "btn-guia-item";
+                    btn.innerHTML = `Guia: ${g.numero} <span class="badge-docs">${subSnap.size} procs</span>`;
+                    btn.onclick = () => window.abrirGuia(d.id, g.numero);
+                    lista.appendChild(btn);
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        window.abrirGuia = async (id, num) => {
+            guiaAtivaId = id;
+            document.getElementById("areaProcessos").style.display = "block";
+            document.getElementById("tituloGuia").innerText = `Guia Selecionada: ${num}`;
+            await window.atualizarLista(id);
+            document.getElementById("areaProcessos").scrollIntoView({ behavior: 'smooth' });
+        };
+
+        window.fecharArea = () => {
+            document.getElementById("areaProcessos").style.display = "none";
+            guiaAtivaId = "";
+            document.getElementById("formProcesso").reset();
+        };
+
+        window.atualizarLista = async (id) => {
+            const container = document.getElementById("listaProcessosUI");
+            const qDocs = query(collection(db, "guias_processos", id, "processos"), orderBy("dataInsercao", "asc"));
+            const snap = await getDocs(qDocs);
+            
+            container.innerHTML = ""; 
+            let numItem = 1;
+            
+            snap.forEach(dSnap => {
+                const p = dSnap.data();
+                container.innerHTML += `
+                    <li style="padding: 10px; background: #f8f9fa; border: 1px solid #ddd; margin-bottom: 5px; border-radius: 4px;">
+                        <strong>${numItem}º. Proc: ${p.numeroProcessoFisico}</strong><br>
+                        <small>Interessado: ${p.interessado} | Assunto: ${p.assunto}</small>
+                    </li>`;
+                numItem++;
+            });
+        };
+
+        document.getElementById("formProcesso").onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById("btnSalvar");
+            btn.disabled = true;
+
+            const procDados = {
+                numeroProcessoFisico: document.getElementById("numeroProcessoFisico").value,
+                dataAbertura: document.getElementById("dataAbertura").value,
+                dataRecebimentoProc: document.getElementById("dataRecebimentoProc").value,
+                assunto: document.getElementById("assunto").value,
+                interessado: document.getElementById("interessado").value,
+                qtdFolhas: document.getElementById("qtdFolhas").value,
+                tipoProcessoSei: document.getElementById("tipoProcessoSei").value,
+                dataInsercao: serverTimestamp(),
+                inseridoPor: auth.currentUser.email
+            };
+
+            try {
+                await addDoc(collection(db, "guias_processos", guiaAtivaId, "processos"), procDados);
+                alert("Processo cadastrado na guia com sucesso!");
+                document.getElementById("formProcesso").reset();
+                window.atualizarLista(guiaAtivaId);
+                carregarGuias();
+            } catch (err) { alert("Erro ao salvar processo."); } finally { btn.disabled = false; }
+        };
+    </script>
+</body>
+</html>
