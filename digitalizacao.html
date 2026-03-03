@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Digitalização de Processos - NUDOF</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <style>
         .guia-card-arquivar { background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 6px solid #f39c12; }
         .data-header-btn { width: 100%; background: #003366; color: white; padding: 12px; border: none; border-radius: 5px; text-align: left; font-weight: bold; margin: 15px 0 5px 0; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
@@ -13,19 +15,20 @@
         .tabela-docs-arquivamento th, .tabela-docs-arquivamento td { padding: 8px; border: 1px solid #ccc; vertical-align: top; }
         .tabela-docs-arquivamento th { background: #f0f2f5; color: #003366; }
         input, select { width: 100%; padding: 6px; box-sizing: border-box; }
+        .contador-pendentes { background: #e74c3c; color: white; padding: 2px 10px; border-radius: 12px; font-size: 0.85em; margin-left: 10px; }
     </style>
 </head>
 <body>
     <div id="appInterface">
         <aside id="sidebar">
-            <div class="sidebar-logo">CONTROLO DE PROCESSOS NUDOF</div>
+            <div class="sidebar-logo">PROCESSOS NUDOF</div>
             <nav>
                 <a href="index.html">🏠 Início / Histórico</a>
                 <a href="guia.html">➕ Nova Guia</a>
                 <a href="processos.html">📄 Inserir Processos</a>
                 <a href="digitalizacao.html" class="ativo">🖨️ Digitalização e SEI</a>
                 <a href="arquivamentoFisico.html">🗄️ Arquivar Físico</a>
-                <a href="documentosArquivados.html">📚 Consulta de Acervo</a>
+                <a href="acervo.html">📚 Consulta de Acervo</a>
                 <button id="btnLogout" class="btn-sair">🚪 Sair do Sistema</button>
             </nav>
         </aside>
@@ -109,7 +112,7 @@
                     processosDaGuia.push(docSnap.id);
                     
                     html += `<tr>
-                        <td><b>${p.numeroProcessoFisico}</b></td>
+                        <td><b>${p.numeroProcessoFisico}</b><br><small>${p.tipoProcessoSei}</small></td>
                         <td><input type="date" id="dataDig_${docSnap.id}" required onchange="window.sincronizarDatasDig(this.value)"></td>
                         <td><input type="date" id="dataSei_${docSnap.id}" required onchange="window.sincronizarDatasSei(this.value)"></td>
                         <td><input type="number" id="qtdImg_${docSnap.id}" required placeholder="Qtd. Imagens"></td>
