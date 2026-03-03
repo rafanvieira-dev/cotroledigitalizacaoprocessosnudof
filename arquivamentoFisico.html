@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arquivamento Físico - NUDOF</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .guia-card-arquivar { background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 6px solid #27ae60; }
+        .input-group label { display: block; font-weight: bold; font-size: 13px; margin-bottom: 5px; color: #34495e; }
+        .input-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
+        .linha-data { display: flex; align-items: center; gap: 15px; background: #fff; padding: 10px 15px; border-radius: 6px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <div id="appInterface">
+        <aside id="sidebar">
+            <div class="sidebar-logo">CONTROLO DE PROCESSOS NUDOF</div>
+            <nav>
+                <a href="index.html">🏠 Início / Histórico</a>
+                <a href="guia.html">➕ Nova Guia</a>
+                <a href="processos.html">📄 Inserir Processos</a>
+                <a href="digitalizacao.html">🖨️ Digitalização e SEI</a>
+                <a href="arquivamentoFisico.html" class="ativo">🗄️ Arquivar Físico</a>
+                <a href="documentosArquivados.html">📚 Consulta de Acervo</a>
+                <button id="btnLogout" class="btn-sair">🚪 Sair do Sistema</button>
+            </nav>
+        </aside>
+
+        <main id="content">
+            <h2 class="page-title">Arquivamento Físico de Processos</h2>
+            <div id="listaParaArquivar"><p>A procurar guias pendentes...</p></div>
+        </main>
+    </div>
+
+    <div id="modalArquivar" class="modal">
+        <div class="modal-content" style="width: 95%; max-width: 650px; margin: 5% auto;">
+            <span class="close-btn" id="closeArquivar" style="float: right; cursor: pointer; font-size: 1.5em;">&times;</span>
+            <h3 id="tituloModalArquivar" style="margin-bottom: 15px; color: #003366;"></h3>
+            
+            <form id="formDadosArquivamento">
+                <div style="background: #e8f4fd; padding: 20px; border-radius: 8px; border: 1px solid #b6d4fe; display: flex; flex-direction: column; gap: 20px;">
+                    
+                    <div class="linha-data">
+                        <label>📅 Data de Arquivamento Físico:</label>
+                        <input type="date" id="dataArquivamentoManual" required style="flex: 1;">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="input-group">
+                            <label>📦 Caixa - Localização Guia:</label>
+                            <input type="text" id="locCaixaGuia" required placeholder="Ex: G-01">
+                        </div>
+                        <div class="input-group">
+                            <label>🗃️ Nº Caixa - Localização Processo:</label>
+                            <input type="text" id="locCaixaProc" required placeholder="Ex: P-045">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary" id="btnConfirmarArq" style="background:#27ae60; padding: 15px; font-weight: bold; width: 100%; margin-top: 15px; font-size: 1.1em;">✅ CONCLUIR ARQUIVAMENTO</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db, auth } from "./firebase.js";
+        import { collection, getDocs, updateDoc, doc, query, where } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+
+        let guiaAtualId = "";
+
+        onAuthStateChanged(auth, (user) => { if (!user) window.location.href = "index.html"; else carregar(); });
+        document.getElementById("btnLogout").onclick = () => signOut(auth);
+
+        async function carregar() {
+            const container = document.getElementById("listaParaArquivar");
+            try {
+                const q = query(collection(db, "guias"), where("status", "==", "Digitalizada"));
+                const snap = await getDocs(q);
+                if(snap.empty) { container.innerHTML = "<p>Nenhuma guia aguardando arquivamento físico.</p>"; return; }
+                
+                container.innerHTML = ""; 
+                snap.forEach(d => {
+                    const g = d.data();
+                    const div = document.createElement("div"); div.className = "guia-card-arquivar";
+                    div.innerHTML = `<div><strong>Guia ${g.numero}</strong><br><small>${g.unidade}</small></div><button class="btn-ver" onclick="window.abrirArq('${d.id}', '${g.numero}')" style="background:#27ae60; color:white; padding:8px 15px; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">📦 Registrar Arquivamento</button>`;
+                    container.appendChild(div);
+                });
+            } catch (err) { console.error(err); }
+        }
+
+        window.abrirArq = (id, num) => {
+            guiaAtualId = id;
+            document.getElementById("btnConfirmarArq").disabled = false;
+            document.getElementById("btnConfirmarArq").innerText = "✅ CONCLUIR ARQUIVAMENTO";
+            document.getElementById("tituloModalArquivar").innerText = "Arquivar Processos da Guia: " + num;
+            
+            document.getElementById("dataArquivamentoManual").value = new Date().toISOString().split('T')[0];
+            document.getElementById("locCaixaGuia").value = "";
+            document.getElementById("locCaixaProc").value = "";
+
+            document.getElementById("modalArquivar").style.display = "block";
+        };
+
+        document.getElementById("formDadosArquivamento").onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById("btnConfirmarArq");
+            btn.disabled = true; btn.innerText = "Gravando...";
+            
+            try {
+                const dataF = document.getElementById("dataArquivamentoManual").value.split("-").reverse().join("/");
+                
+                await updateDoc(doc(db, "guias", guiaAtualId), {
+                    status: "Arquivada",
+                    locCaixaFinal: document.getElementById("locCaixaGuia").value,
+                    locCaixaDocumentos: document.getElementById("locCaixaProc").value,
+                    dataArquivamentoSistema: dataF,
+                    arquivadoPor: auth.currentUser.email
+                });
+
+                alert("Arquivamento Físico Concluído com Sucesso! A guia consta agora no Acervo.");
+                document.getElementById("modalArquivar").style.display = "none";
+                carregar();
+            } catch (err) { alert("Erro ao salvar."); btn.disabled = false; }
+        };
+
+        document.getElementById("closeArquivar").onclick = () => document.getElementById("modalArquivar").style.display = "none";
+    </script>
+</body>
+</html>
