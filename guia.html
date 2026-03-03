@@ -21,10 +21,16 @@
         </aside>
 
         <main id="content">
-            <h2 class="page-title">Registrar Nova Guia de Remessa (Processos)</h2>
+            <h2 class="page-title">Registrar Nova Guia de Remessa</h2>
             <div class="form-container">
-                <label>Nº Guia de Remessa:</label>
-                <input type="text" id="numeroGuia" placeholder="Ex: 001/2026" required>
+                <div style="position: relative;">
+                    <label>Nº Guia de Remessa:</label>
+                    <div id="balaoSugestao" style="display: none; position: absolute; top: -5px; left: 160px; background-color: #f39c12; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; box-shadow: 0 3px 6px rgba(0,0,0,0.3); cursor: pointer; z-index: 10;">
+                        💡 Sugestão: <span id="textoSugestao">...</span> (Clique para usar)
+                        <div style="position: absolute; bottom: -6px; left: 20px; width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 6px solid #f39c12;"></div>
+                    </div>
+                    <input type="text" id="numeroGuia" placeholder="Ex: 001/2026" required autocomplete="off">
+                </div>
                 
                 <label>Unidade Solicitante:</label>
                 <input type="text" id="unidade" placeholder="Nome da Unidade" required>
@@ -39,7 +45,6 @@
                         <input type="time" id="horaRecebimento" required>
                     </div>
                 </div>
-
                 <button class="btn-primary" id="btnSalvarGuia">Criar Guia</button>
             </div>
         </main>
@@ -47,32 +52,48 @@
 
     <script type="module">
         import { db, auth } from "./firebase.js";
-        import { collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+        import { collection, addDoc, getDocs, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
-        onAuthStateChanged(auth, (user) => { if (!user) window.location.href = "index.html"; });
-        document.getElementById("btnLogout").addEventListener("click", () => signOut(auth));
+        let proximoNumSugerido = "";
 
-        document.getElementById("btnSalvarGuia").addEventListener("click", async () => {
-            const numero = document.getElementById("numeroGuia").value.trim();
+        async function buscarSugestaoNumero() {
+            try {
+                const q = query(collection(db, "guias"), orderBy("dataCriacao", "desc"), limit(1));
+                const snap = await getDocs(q);
+                if (!snap.empty) {
+                    const ultimaGuia = snap.docs[0].data();
+                    const ultimoNumStr = ultimaGuia.numero || "0";
+                    const match = ultimoNumStr.match(/^\d+/);
+                    if (match) {
+                        proximoNumSugerido = String(parseInt(match[0], 10) + 1).padStart(3, '0');
+                    } else { proximoNumSugerido = "001"; }
+                } else { proximoNumSugerido = "001"; }
+                document.getElementById("textoSugestao").innerText = proximoNumSugerido;
+            } catch (e) { proximoNumSugerido = "001"; }
+        }
+
+        onAuthStateChanged(auth, (user) => { if (!user) window.location.href = "index.html"; else buscarSugestaoNumero(); });
+        document.getElementById("btnLogout").onclick = () => signOut(auth);
+
+        const inputGuia = document.getElementById("numeroGuia");
+        const balaoSugestao = document.getElementById("balaoSugestao");
+        inputGuia.addEventListener("focus", () => { balaoSugestao.style.display = "block"; });
+        inputGuia.addEventListener("blur", () => { setTimeout(() => balaoSugestao.style.display = "none", 200); });
+        balaoSugestao.addEventListener("click", () => { inputGuia.value = proximoNumSugerido; });
+
+        document.getElementById("btnSalvarGuia").onclick = async () => {
+            const numero = inputGuia.value.trim();
             const unidade = document.getElementById("unidade").value.trim();
             const data = document.getElementById("dataRecebimento").value;
             const hora = document.getElementById("horaRecebimento").value;
 
             if (!numero || !unidade || !data || !hora) return alert("Preencha todos os campos!");
 
-            const btn = document.getElementById("btnSalvarGuia");
-            btn.disabled = true; btn.innerText = "A verificar...";
-
             try {
                 const q = query(collection(db, "guias"), where("numero", "==", numero));
                 const snap = await getDocs(q);
-
-                if (!snap.empty) {
-                    alert(`Já existe uma guia com o número ${numero}!`);
-                    btn.disabled = false; btn.innerText = "Criar Guia";
-                    return;
-                }
+                if (!snap.empty) return alert(`Já existe uma guia com o número ${numero}!`);
 
                 await addDoc(collection(db, "guias"), {
                     numero, unidade, dataRecebimento: data, horaRecebimento: hora,
@@ -80,10 +101,8 @@
                 });
                 alert("Guia criada com sucesso!");
                 window.location.href = "processos.html";
-            } catch (e) { 
-                alert("Erro ao salvar."); btn.disabled = false; btn.innerText = "Criar Guia";
-            }
-        });
+            } catch (e) { alert("Erro ao salvar."); }
+        };
     </script>
 </body>
 </html>
