@@ -5,8 +5,8 @@
     <title>Inserir Processos - NUDOF</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .btn-guia-item { padding: 12px 20px; margin: 5px; border: none; border-radius: 5px; background: #003366; color: white; cursor: pointer; font-weight: bold; font-size: 1.1em; }
-        .btn-guia-item:hover { background: #4682B4; }
+        .btn-guia-item { padding: 12px 20px; margin: 5px; border: none; border-radius: 5px; background: #003366; color: white; cursor: pointer; font-weight: bold; }
+        #contadorProcs { font-weight: bold; padding: 10px; border-radius: 5px; text-align: center; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -26,219 +26,198 @@
 
         <main id="content">
             <h2 class="page-title">Cadastro de Processo Físico</h2>
-            
             <div class="form-container" id="containerListaGuias">
                 <h3>1. Selecione a Guia de Destino</h3>
-                <div id="listaGuias" style="margin-top: 15px; display: flex; flex-wrap: wrap;"><p>A procurar guias abertas...</p></div>
+                <div id="listaGuias" style="margin-top: 15px; display: flex; flex-wrap: wrap;"></div>
             </div>
 
             <div id="areaProcessos" style="display:none;">
                 <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #ccc; padding-top: 20px; margin-bottom: 15px;">
-                    <h3 id="tituloGuia" style="color: #003366; margin: 0;"></h3>
-                    <button type="button" onclick="window.fecharArea()" style="background: #7f8c8d; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">❌ Fechar Guia</button>
+                    <h3 id="tituloGuia" style="color: #003366;"></h3>
+                    <button type="button" onclick="window.fecharArea()" style="background: #7f8c8d; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">❌ Fechar</button>
                 </div>
 
                 <div class="form-container">
                     <form id="formProcesso">
                         <label>Nº do Processo Físico:</label>
                         <input type="text" id="numeroProcessoFisico" placeholder="Ex: 0000000-00.2026.8.19.0000" required>
-                        
-                        <label>Guia de Remessa (Vinculada Automaticamente):</label>
-                        <input type="text" id="guiaRemessa" disabled style="background: #e9ecef; font-weight: bold; color: #333;">
-
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                            <div>
-                                <label>Data de Abertura do Processo:</label>
-                                <input type="date" id="dataAbertura" required>
-                            </div>
-                            <div>
-                                <label>Data de Recebimento:</label>
-                                <input type="date" id="dataRecebimentoProc" required>
-                            </div>
+                            <div><label>Data de Abertura:</label><input type="date" id="dataAbertura" required></div>
+                            <div><label>Data de Recebimento:</label><input type="date" id="dataRecebimentoProc" required></div>
                         </div>
-
-                        <label>Assunto (Capa):</label>
-                        <input type="text" id="assunto" placeholder="Ex: Execução de Alimentos" required>
-
-                        <label>Interessado:</label>
-                        <input type="text" id="interessado" placeholder="Nome da parte" required>
-
+                        <label>Assunto (Capa):</label><input type="text" id="assunto" required>
+                        <label>Interessado:</label><input type="text" id="interessado" required>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                            <div>
-                                <label>Quantidade de Folhas Físicas:</label>
-                                <input type="number" id="qtdFolhas" required>
-                            </div>
+                            <div><label>Qtd. Folhas:</label><input type="number" id="qtdFolhas" required></div>
                             <div>
                                 <label>Tipo de Processo no SEI:</label>
-                                <label>Tipo de Processo no SEI:</label>
-<select id="tipoProcessoSei" required style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; margin: 10px 0 20px 0;">
-    <option value="" disabled selected>Selecione o tipo de processo...</option>
-    <option value="Administração Geral: Ação Rescisória">Administração Geral: Ação Rescisória</option>
-    <option value="Administração Geral: Comunicação de Violação de Prerrogativa">Administração Geral: Comunicação de Violação de Prerrogativa</option>
-    <option value="Administração Geral: Convites">Administração Geral: Convites</option>
-    <option value="Administração Geral: Normatização Interna">Administração Geral: Normatização Interna</option>
-    <option value="Administração Geral: Plano de Atuação">Administração Geral: Plano de Atuação</option>
-    <option value="Administração Geral: Reestruturação - desmembramento, criação e extinção de órgãos de atuação">Administração Geral: Reestruturação - desmembramento, criação e extinção de órgãos de atuação</option>
-    <option value="Administração Geral: Solicitação/Prestação de Informações">Administração Geral: Solicitação/Prestação de Informações</option>
-    <option value="Assessoria de Assuntos Institucionais: Consulta">Assessoria de Assuntos Institucionais: Consulta</option>
-    <option value="CEJUR: Auxílio Livro">CEJUR: Auxílio Livro</option>
-    <option value="CEJUR: Editais para participação defensores e servidores em congressos, cursos e seminários">CEJUR: Editais para participação defensores e servidores em congressos, cursos e seminários</option>
-    <option value="CEJUR: Grupo de Estudos e Pesquisas">CEJUR: Grupo de Estudos e Pesquisas</option>
-    <option value="CEJUR: Honorários - Estorno">CEJUR: Honorários - Estorno</option>
-    <option value="CEJUR: Honorários - Execução">CEJUR: Honorários - Execução</option>
-    <option value="CEJUR: Honorários - Parcelamento">CEJUR: Honorários - Parcelamento</option>
-    <option value="Comunicação: Solicitações">Comunicação: Solicitações</option>
-    <option value="Conselho Superior: Afastamento de Titularidade">Conselho Superior: Afastamento de Titularidade</option>
-    <option value="Conselho Superior: Avaliação de Estágio Probatório">Conselho Superior: Avaliação de Estágio Probatório</option>
-    <option value="Conselho Superior: Deliberação">Conselho Superior: Deliberação</option>
-    <option value="Conselho Superior: Lista de Antiguidade">Conselho Superior: Lista de Antiguidade</option>
-    <option value="Conselho Superior: Lista Tríplice para Nomeação do Ouvidor">Conselho Superior: Lista Tríplice para Nomeação do Ouvidor</option>
-    <option value="Conselho Superior: Pronunciamento, Recomendação, Representação e Requisição">Conselho Superior: Pronunciamento, Recomendação, Representação e Requisição</option>
-    <option value="Contabilidade: Prestação de Contas">Contabilidade: Prestação de Contas</option>
-    <option value="Controle Interno: Plano de Auditoria">Controle Interno: Plano de Auditoria</option>
-    <option value="Controle Interno: Prestação de Contas de Adiantamento">Controle Interno: Prestação de Contas de Adiantamento</option>
-    <option value="Controle Interno: Tomada de contas">Controle Interno: Tomada de contas</option>
-    <option value="Convênios/Ajustes: Acordo de Cooperação">Convênios/Ajustes: Acordo de Cooperação</option>
-    <option value="Coordenação de Defesa Criminal: Consulta">Coordenação de Defesa Criminal: Consulta</option>
-    <option value="Coordenação de Estágio: Sindicância">Coordenação de Estágio: Sindicância</option>
-    <option value="Corregedoria: Ausência a Convocações, Plantões e a Órgãos de Atuação">Corregedoria: Ausência a Convocações, Plantões e a Órgãos de Atuação</option>
-    <option value="Corregedoria: Peticionamento Integrado">Corregedoria: Peticionamento Integrado</option>
-    <option value="Corregedoria: Processo Administrativo Disciplinar">Corregedoria: Processo Administrativo Disciplinar</option>
-    <option value="Corregedoria: Reclamação/Elogio/Sugestão">Corregedoria: Reclamação/Elogio/Sugestão</option>
-    <option value="Corregedoria: Revisão Criminal">Corregedoria: Revisão Criminal</option>
-    <option value="Corregedoria: Sindicância">Corregedoria: Sindicância</option>
-    <option value="Corregedoria: Suspeição e Impedimento">Corregedoria: Suspeição e Impedimento</option>
-    <option value="Demanda Externa: Outras Entidades Privadas">Demanda Externa: Outras Entidades Privadas</option>
-    <option value="Demanda Externa: Outros Órgãos Públicos">Demanda Externa: Outros Órgãos Públicos</option>
-    <option value="Gabinete: Afastamentos de Defensores Públicos">Gabinete: Afastamentos de Defensores Públicos</option>
-    <option value="Gabinete: Conflito de Atribuições">Gabinete: Conflito de Atribuições</option>
-    <option value="Gabinete: Resolução 1131/2022 - Casos de Denegação da Assistência Jurídica">Gabinete: Resolução 1131/2022 - Casos de Denegação da Assistência Jurídica</option>
-    <option value="Gestão da Informação: Cadastro de Usuário Externo no SEI">Gestão da Informação: Cadastro de Usuário Externo no SEI</option>
-    <option value="Gestão da Informação: Cadastro de Usuário Interno no SEI">Gestão da Informação: Cadastro de Usuário Interno no SEI</option>
-    <option value="Gestão de Contrato: Processo de Pagamento">Gestão de Contrato: Processo de Pagamento</option>
-    <option value="Gestão de Imóveis: Cessão">Gestão de Imóveis: Cessão</option>
-    <option value="Gestão de Imóveis: Locação">Gestão de Imóveis: Locação</option>
-    <option value="Gestão Documental: Acesso à Informação">Gestão Documental: Acesso à Informação</option>
-    <option value="Infraestrutura: Apoio de Engenharia Civil">Infraestrutura: Apoio de Engenharia Civil</option>
-    <option value="Infraestrutura: Projetos de Arquitetura">Infraestrutura: Projetos de Arquitetura</option>
-    <option value="Licitação: Acompanhamento de fiscalização de contratos">Licitação: Acompanhamento de fiscalização de contratos</option>
-    <option value="Licitação: Adesão a Ata de RP-Não Participante">Licitação: Adesão a Ata de RP-Não Participante</option>
-    <option value="Licitação: Aplicação de Sanção decorrente de Contratação">Licitação: Aplicação de Sanção decorrente de Contratação</option>
-    <option value="Licitação: Dispensa Especial">Licitação: Dispensa Especial</option>
-    <option value="Licitação: Inexigibilidade">Licitação: Inexigibilidade</option>
-    <option value="Licitação: Plano de Aquisições">Licitação: Plano de Aquisições</option>
-    <option value="Licitação: Pregão Eletrônico">Licitação: Pregão Eletrônico</option>
-    <option value="Licitação: Pregão Eletrônico-Registro de Preço">Licitação: Pregão Eletrônico-Registro de Preço</option>
-    <option value="Licitação: Prestação de Serviços">Licitação: Prestação de Serviços</option>
-    <option value="Licitação: Termo de Ajuste de Contas">Licitação: Termo de Ajuste de Contas</option>
-    <option value="Material: Desfazimento de Material de Consumo">Material: Desfazimento de Material de Consumo</option>
-    <option value="Material: Desfazimento de Material Permanente">Material: Desfazimento de Material Permanente</option>
-    <option value="Material: Movimentação de Material Permanente">Material: Movimentação de Material Permanente</option>
-    <option value="Orçamento e Finanças: Adiantamento">Orçamento e Finanças: Adiantamento</option>
-    <option value="Orçamento e Finanças: Diária de Deslocamento de Servidor">Orçamento e Finanças: Diária de Deslocamento de Servidor</option>
-    <option value="Orçamento e Finanças: Estimativa de Receita">Orçamento e Finanças: Estimativa de Receita</option>
-    <option value="Orçamento e Finanças: Liquidação de Despesas">Orçamento e Finanças: Liquidação de Despesas</option>
-    <option value="Orçamento e Finanças: Pagamento de Convênio">Orçamento e Finanças: Pagamento de Convênio</option>
-    <option value="Orçamento e Finanças: Reconhecimento de Dívida">Orçamento e Finanças: Reconhecimento de Dívida</option>
-    <option value="Organização e Funcionamento: Eleição de Conselheiro Classista">Organização e Funcionamento: Eleição de Conselheiro Classista</option>
-    <option value="Organização e Funcionamento: Informações sobre o Órgão">Organização e Funcionamento: Informações sobre o Órgão</option>
-    <option value="Pagamento: Descontos Previdenciários - RPPS">Pagamento: Descontos Previdenciários - RPPS</option>
-    <option value="Pagamento: Reconhecimento de Dívida com Defensor/Servidor (Fato Gerador há mais de 2 anos)">Pagamento: Reconhecimento de Dívida com Defensor/Servidor (Fato Gerador há mais de 2 anos)</option>
-    <option value="Patrimônio: Gestão de Acervo Bibliográfico">Patrimônio: Gestão de Acervo Bibliográfico</option>
-    <option value="Pessoal: Adiamento de Posse em Concurso de Servidor">Pessoal: Adiamento de Posse em Concurso de Servidor</option>
-    <option value="Pessoal: Adicional de Qualificação do(a) Servidor(a)">Pessoal: Adicional de Qualificação do(a) Servidor(a)</option>
-    <option value="Pessoal: Afastamento para Concorrer a Mandato Eletivo">Pessoal: Afastamento para Concorrer a Mandato Eletivo</option>
-    <option value="Pessoal: Afastamento para Curso de Formação">Pessoal: Afastamento para Curso de Formação</option>
-    <option value="Pessoal: Afastamento para Exercer Mandato Eletivo">Pessoal: Afastamento para Exercer Mandato Eletivo</option>
-    <option value="Pessoal: Afastamento para Serviço Eleitoral (TRE)">Pessoal: Afastamento para Serviço Eleitoral (TRE)</option>
-    <option value="Pessoal: Afastamento para servir em Organismo Internacional">Pessoal: Afastamento para servir em Organismo Internacional</option>
-    <option value="Pessoal: Aposentadoria - Concessão">Pessoal: Aposentadoria - Concessão</option>
-    <option value="Pessoal: Aposentadoria - Pensão Vitalícia">Pessoal: Aposentadoria - Pensão Vitalícia</option>
-    <option value="Pessoal: Aposentadoria - Revisão">Pessoal: Aposentadoria - Revisão</option>
-    <option value="Pessoal: Apresentação de Certificado de Curso">Pessoal: Apresentação de Certificado de Curso</option>
-    <option value="Pessoal: Assentamento Funcional do Defensor">Pessoal: Assentamento Funcional do Defensor</option>
-    <option value="Pessoal: Assentamento Funcional do Servidor">Pessoal: Assentamento Funcional do Servidor</option>
-    <option value="Pessoal: Atualização de Pensão">Pessoal: Atualização de Pensão</option>
-    <option value="Pessoal: Ausência em razão de Casamento">Pessoal: Ausência em razão de Casamento</option>
-    <option value="Pessoal: Ausência por Falecimento de Familiar">Pessoal: Ausência por Falecimento de Familiar</option>
-    <option value="Pessoal: Auxílio Saúde de Defensor Público">Pessoal: Auxílio Saúde de Defensor Público</option>
-    <option value="Pessoal: Auxílio Saúde de Servidor">Pessoal: Auxílio Saúde de Servidor</option>
-    <option value="Pessoal: Auxílio Transporte - Defensor">Pessoal: Auxílio Transporte - Defensor</option>
-    <option value="Pessoal: Avaliação de Desempenho Individual">Pessoal: Avaliação de Desempenho Individual</option>
-    <option value="Pessoal: Avaliação de Estágio Probatório de Servidor">Pessoal: Avaliação de Estágio Probatório de Servidor</option>
-    <option value="Pessoal: Averbação de Tempo de Serviço">Pessoal: Averbação de Tempo de Serviço</option>
-    <option value="Pessoal: Cadastramento de Consignatárias">Pessoal: Cadastramento de Consignatárias</option>
-    <option value="Pessoal: Capacitação para a Servidora e para o Servidor promovida por outra Instituição">Pessoal: Capacitação para a Servidora e para o Servidor promovida por outra Instituição</option>
-    <option value="Pessoal: Cessão de Defensor para outro Órgão">Pessoal: Cessão de Defensor para outro Órgão</option>
-    <option value="Pessoal: Cessão de Servidor para outro Órgão">Pessoal: Cessão de Servidor para outro Órgão</option>
-    <option value="Pessoal: Concessão e Fruição de Licença Especial de Defensor">Pessoal: Concessão e Fruição de Licença Especial de Defensor</option>
-    <option value="Pessoal: Concessão e Fruição de Licença Especial de Servidor">Pessoal: Concessão e Fruição de Licença Especial de Servidor</option>
-    <option value="Pessoal: Concessão e Revisão de Abono Permanência e Benefício de Permanência">Pessoal: Concessão e Revisão de Abono Permanência e Benefício de Permanência</option>
-    <option value="Pessoal: Concurso de Lotação">Pessoal: Concurso de Lotação</option>
-    <option value="Pessoal: Concurso de Remoção">Pessoal: Concurso de Remoção</option>
-    <option value="Pessoal: Concurso Público - Organização">Pessoal: Concurso Público - Organização</option>
-    <option value="Pessoal: Concurso Público de Defensor - Organização">Pessoal: Concurso Público de Defensor - Organização</option>
-    <option value="Pessoal: Controle de Frequência">Pessoal: Controle de Frequência</option>
-    <option value="Pessoal: Curso no Exterior - sem ônus">Pessoal: Curso no Exterior - sem ônus</option>
-    <option value="Pessoal: Desconto de Pensão Alimentícia">Pessoal: Desconto de Pensão Alimentícia</option>
-    <option value="Pessoal: Devolução/Exoneração de Servidor Cedido">Pessoal: Devolução/Exoneração de Servidor Cedido</option>
-    <option value="Pessoal: Emissão de Certidão de Tempo de Serviço de Ex-servidor para o Estado do Rio de Janeiro">Pessoal: Emissão de Certidão de Tempo de Serviço de Ex-servidor para o Estado do Rio de Janeiro</option>
-    <option value="Pessoal: Emissão de Certidão de Tempo de Serviço de Ex-servidor para Outros Entes Federativos">Pessoal: Emissão de Certidão de Tempo de Serviço de Ex-servidor para Outros Entes Federativos</option>
-    <option value="Pessoal: Emissão de Certidões e Declarações">Pessoal: Emissão de Certidões e Declarações</option>
-    <option value="Pessoal: Exoneração de Cargo Comissionado">Pessoal: Exoneração de Cargo Comissionado</option>
-    <option value="Pessoal: Exoneração de Cargo Efetivo">Pessoal: Exoneração de Cargo Efetivo</option>
-    <option value="Pessoal: Falecimento de Servidor/Defensor">Pessoal: Falecimento de Servidor/Defensor</option>
-    <option value="Pessoal: Férias de Defensor">Pessoal: Férias de Defensor</option>
-    <option value="Pessoal: Férias de Servidor(a)">Pessoal: Férias de Servidor(a)</option>
-    <option value="Pessoal: Folha de Pagamento">Pessoal: Folha de Pagamento</option>
-    <option value="Pessoal: Gratificação - Concessão/ Majoração/ Redução">Pessoal: Gratificação - Concessão/ Majoração/ Redução</option>
-    <option value="Pessoal: Gratificação por Encargo - Curso/Concurso">Pessoal: Gratificação por Encargo - Curso/Concurso</option>
-    <option value="Pessoal: Incorporação de Cargo em Comissão">Pessoal: Incorporação de Cargo em Comissão</option>
-    <option value="Pessoal: Isenção de Imposto de Renda">Pessoal: Isenção de Imposto de Renda</option>
-    <option value="Pessoal: Licença Amamentação">Pessoal: Licença Amamentação</option>
-    <option value="Pessoal: Licença para Tratamento da Própria Saúde">Pessoal: Licença para Tratamento da Própria Saúde</option>
-    <option value="Pessoal: Licença para Tratar de Interesses Particulares">Pessoal: Licença para Tratar de Interesses Particulares</option>
-    <option value="Pessoal: Licença Paternidade">Pessoal: Licença Paternidade</option>
-    <option value="Pessoal: Licença por Doença em Pessoa da Família">Pessoal: Licença por Doença em Pessoa da Família</option>
-    <option value="Pessoal: Licença sem Vencimento para Acompanhar Cônjuge">Pessoal: Licença sem Vencimento para Acompanhar Cônjuge</option>
-    <option value="Pessoal: Licença sem Vencimento para Trato de Interesse Particular de Servidor">Pessoal: Licença sem Vencimento para Trato de Interesse Particular de Servidor</option>
-    <option value="Pessoal: Nomeação de Cargo Comissionado">Pessoal: Nomeação de Cargo Comissionado</option>
-    <option value="Pessoal: Orientações e Diretrizes Gerais">Pessoal: Orientações e Diretrizes Gerais</option>
-    <option value="Pessoal: Pagamento de Acumulação de Defensor">Pessoal: Pagamento de Acumulação de Defensor</option>
-    <option value="Pessoal: Pagamento de Benefício">Pessoal: Pagamento de Benefício</option>
-    <option value="Pessoal: Pensão por Morte de Servidor">Pessoal: Pensão por Morte de Servidor</option>
-    <option value="Pessoal: Permuta de Servidores">Pessoal: Permuta de Servidores</option>
-    <option value="Pessoal: Progressão e Promoção (Quadro Efetivo)">Pessoal: Progressão e Promoção (Quadro Efetivo)</option>
-    <option value="Pessoal: Promover Defensor">Pessoal: Promover Defensor</option>
-    <option value="Pessoal: Provimento - Nomeação para Cargo Comissionado">Pessoal: Provimento - Nomeação para Cargo Comissionado</option>
-    <option value="Pessoal: Provimento - Nomeação para Cargo Efetivo">Pessoal: Provimento - Nomeação para Cargo Efetivo</option>
-    <option value="Pessoal: Provimento - por Readaptação">Pessoal: Provimento - por Readaptação</option>
-    <option value="Pessoal: Recadastramento de Servidores Inativos/Pensionistas">Pessoal: Recadastramento de Servidores Inativos/Pensionistas</option>
-    <option value="Pessoal: Recurso - Inaptidão em Exame Admissional">Pessoal: Recurso - Inaptidão em Exame Admissional</option>
-    <option value="Pessoal: Redução de Carga Horária">Pessoal: Redução de Carga Horária</option>
-    <option value="Pessoal: Regularização de Cessão - Devolução de Cedido">Pessoal: Regularização de Cessão - Devolução de Cedido</option>
-    <option value="Pessoal: Regularização de Cessão - Nomeação de Servidor Cedido">Pessoal: Regularização de Cessão - Nomeação de Servidor Cedido</option>
-    <option value="Pessoal: Remoção por Permuta de Titularidade">Pessoal: Remoção por Permuta de Titularidade</option>
-    <option value="Pessoal: Ressarcimento ao Erário">Pessoal: Ressarcimento ao Erário</option>
-    <option value="Pessoal: Restruturação de Cargos e Funções">Pessoal: Restruturação de Cargos e Funções</option>
-    <option value="Pessoal: Retribuição por Cargo em Comissão">Pessoal: Retribuição por Cargo em Comissão</option>
-    <option value="Pessoal: Salário-Família">Pessoal: Salário-Família</option>
-    <option value="Pessoal: Saúde - Prontuário Médico">Pessoal: Saúde - Prontuário Médico</option>
-    <option value="Pessoal: Triênio">Pessoal: Triênio</option>
-    <option value="Planejamento Estratégico: Elaboração do PPA e Execução do PPA">Planejamento Estratégico: Elaboração do PPA e Execução do PPA</option>
-    <option value="Tecnologia da Informação: Gestão de Bens e Serviços de TI">Tecnologia da Informação: Gestão de Bens e Serviços de TI</option>
-    <option value="Tecnologia da Informação: Normatização Interna">Tecnologia da Informação: Normatização Interna</option>
-    <option value="Tutela Coletiva: Procedimento de Instrução">Tutela Coletiva: Procedimento de Instrução</option>
-</select>
+                                <select id="tipoProcessoSei" required>
+                                    <option value="" disabled selected>Selecione...</option>
+                                    <option value="Administração Geral: Ação Rescisória">Administração Geral: Ação Rescisória</option>
+                                    <option value="Administração Geral: Comunicação de Violação de Prerrogativa">Administração Geral: Comunicação de Violação de Prerrogativa</option>
+                                    <option value="Administração Geral: Convites">Administração Geral: Convites</option>
+                                    <option value="Administração Geral: Normatização Interna">Administração Geral: Normatização Interna</option>
+                                    <option value="Administração Geral: Plano de Atuação">Administração Geral: Plano de Atuação</option>
+                                    <option value="Administração Geral: Reestruturação - desmembramento, criação e extinção de órgãos de atuação">Administração Geral: Reestruturação - desmembramento, criação e extinção de órgãos de atuação</option>
+                                    <option value="Administração Geral: Solicitação/Prestação de Informações">Administração Geral: Solicitação/Prestação de Informações</option>
+                                    <option value="Assessoria de Assuntos Institucionais: Consulta">Assessoria de Assuntos Institucionais: Consulta</option>
+                                    <option value="CEJUR: Auxílio Livro">CEJUR: Auxílio Livro</option>
+                                    <option value="CEJUR: Editais para participação defensores e servidores em congressos, cursos e seminários">CEJUR: Editais para participação defensores e servidores em congressos, cursos e seminários</option>
+                                    <option value="CEJUR: Grupo de Estudos e Pesquisas">CEJUR: Grupo de Estudos e Pesquisas</option>
+                                    <option value="CEJUR: Honorários - Estorno">CEJUR: Honorários - Estorno</option>
+                                    <option value="CEJUR: Honorários - Execução">CEJUR: Honorários - Execução</option>
+                                    <option value="CEJUR: Honorários - Parcelamento">CEJUR: Honorários - Parcelamento</option>
+                                    <option value="Comunicação: Solicitações">Comunicação: Solicitações</option>
+                                    <option value="Conselho Superior: Afastamento de Titularidade">Conselho Superior: Afastamento de Titularidade</option>
+                                    <option value="Conselho Superior: Avaliação de Estágio Probatório">Conselho Superior: Avaliação de Estágio Probatório</option>
+                                    <option value="Conselho Superior: Deliberação">Conselho Superior: Deliberação</option>
+                                    <option value="Conselho Superior: Lista de Antiguidade">Conselho Superior: Lista de Antiguidade</option>
+                                    <option value="Conselho Superior: Lista Tríplice para Nomeação do Ouvidor">Conselho Superior: Lista Tríplice para Nomeação do Ouvidor</option>
+                                    <option value="Conselho Superior: Pronunciamento, Recomendação, Representação e Requisição">Conselho Superior: Pronunciamento, Recomendação, Representação e Requisição</option>
+                                    <option value="Contabilidade: Prestação de Contas">Contabilidade: Prestação de Contas</option>
+                                    <option value="Controle Interno: Plano de Auditoria">Controle Interno: Plano de Auditoria</option>
+                                    <option value="Controle Interno: Prestação de Contas de Adiantamento">Controle Interno: Prestação de Contas de Adiantamento</option>
+                                    <option value="Controle Interno: Tomada de contas">Controle Interno: Tomada de contas</option>
+                                    <option value="Convênios/Ajustes: Acordo de Cooperação">Convênios/Ajustes: Acordo de Cooperação</option>
+                                    <option value="Coordenação de Defesa Criminal: Consulta">Coordenação de Defesa Criminal: Consulta</option>
+                                    <option value="Coordenação de Estágio: Sindicância">Coordenação de Estágio: Sindicância</option>
+                                    <option value="Corregedoria: Ausência a Convocações, Plantões e a Órgãos de Atuação">Corregedoria: Ausência a Convocações, Plantões e a Órgãos de Atuação</option>
+                                    <option value="Corregedoria: Peticionamento Integrado">Corregedoria: Peticionamento Integrado</option>
+                                    <option value="Corregedoria: Processo Administrativo Disciplinar">Corregedoria: Processo Administrativo Disciplinar</option>
+                                    <option value="Corregedoria: Reclamação/Elogio/Sugestão">Corregedoria: Reclamação/Elogio/Sugestão</option>
+                                    <option value="Corregedoria: Revisão Criminal">Corregedoria: Revisão Criminal</option>
+                                    <option value="Corregedoria: Sindicância">Corregedoria: Sindicância</option>
+                                    <option value="Corregedoria: Suspeição e Impedimento">Corregedoria: Suspeição e Impedimento</option>
+                                    <option value="Demanda Externa: Outras Entidades Privadas">Demanda Externa: Outras Entidades Privadas</option>
+                                    <option value="Demanda Externa: Outros Órgãos Públicos">Demanda Externa: Outros Órgãos Públicos</option>
+                                    <option value="Gabinete: Afastamentos de Defensores Públicos">Gabinete: Afastamentos de Defensores Públicos</option>
+                                    <option value="Gabinete: Conflito de Atribuições">Gabinete: Conflito de Atribuições</option>
+                                    <option value="Gabinete: Resolução 1131/2022 - Casos de Denegação da Assistência Jurídica">Gabinete: Resolução 1131/2022 - Casos de Denegação da Assistência Jurídica</option>
+                                    <option value="Gestão da Informação: Cadastro de Usuário Externo no SEI">Gestão da Informação: Cadastro de Usuário Externo no SEI</option>
+                                    <option value="Gestão da Informação: Cadastro de Usuário Interno no SEI">Gestão da Informação: Cadastro de Usuário Interno no SEI</option>
+                                    <option value="Gestão de Contrato: Processo de Pagamento">Gestão de Contrato: Processo de Pagamento</option>
+                                    <option value="Gestão de Imóveis: Cessão">Gestão de Imóveis: Cessão</option>
+                                    <option value="Gestão de Imóveis: Locação">Gestão de Imóveis: Locação</option>
+                                    <option value="Gestão Documental: Acesso à Informação">Gestão Documental: Acesso à Informação</option>
+                                    <option value="Infraestrutura: Apoio de Engenharia Civil">Infraestrutura: Apoio de Engenharia Civil</option>
+                                    <option value="Infraestrutura: Projetos de Arquitetura">Infraestrutura: Projetos de Arquitetura</option>
+                                    <option value="Licitação: Acompanhamento de fiscalização de contratos">Licitação: Acompanhamento de fiscalização de contratos</option>
+                                    <option value="Licitação: Adesão a Ata de RP-Não Participante">Licitação: Adesão a Ata de RP-Não Participante</option>
+                                    <option value="Licitação: Aplicação de Sanção decorrente de Contratação">Licitação: Aplicação de Sanção decorrente de Contratação</option>
+                                    <option value="Licitação: Dispensa Especial">Licitação: Dispensa Especial</option>
+                                    <option value="Licitação: Inexigibilidade">Licitação: Inexigibilidade</option>
+                                    <option value="Licitação: Plano de Aquisições">Licitação: Plano de Aquisições</option>
+                                    <option value="Licitação: Pregão Eletrônico">Licitação: Pregão Eletrônico</option>
+                                    <option value="Licitação: Pregão Eletrônico-Registro de Preço">Licitação: Pregão Eletrônico-Registro de Preço</option>
+                                    <option value="Licitação: Prestação de Serviços">Licitação: Prestação de Serviços</option>
+                                    <option value="Licitação: Termo de Ajuste de Contas">Licitação: Termo de Ajuste de Contas</option>
+                                    <option value="Material: Desfazimento de Material de Consumo">Material: Desfazimento de Material de Consumo</option>
+                                    <option value="Material: Desfazimento de Material Permanente">Material: Desfazimento de Material Permanente</option>
+                                    <option value="Material: Movimentação de Material Permanente">Material: Movimentação de Material Permanente</option>
+                                    <option value="Orçamento e Finanças: Adiantamento">Orçamento e Finanças: Adiantamento</option>
+                                    <option value="Orçamento e Finanças: Diária de Deslocamento de Servidor">Orçamento e Finanças: Diária de Deslocamento de Servidor</option>
+                                    <option value="Orçamento e Finanças: Estimativa de Receita">Orçamento e Finanças: Estimativa de Receita</option>
+                                    <option value="Orçamento e Finanças: Liquidação de Despesas">Orçamento e Finanças: Liquidação de Despesas</option>
+                                    <option value="Orçamento e Finanças: Pagamento de Convênio">Orçamento e Finanças: Pagamento de Convênio</option>
+                                    <option value="Orçamento e Finanças: Reconhecimento de Dívida">Orçamento e Finanças: Reconhecimento de Dívida</option>
+                                    <option value="Organização e Funcionamento: Eleição de Conselheiro Classista">Organização e Funcionamento: Eleição de Conselheiro Classista</option>
+                                    <option value="Organização e Funcionamento: Informações sobre o Órgão">Organização e Funcionamento: Informações sobre o Órgão</option>
+                                    <option value="Pagamento: Descontos Previdenciários - RPPS">Pagamento: Descontos Previdenciários - RPPS</option>
+                                    <option value="Pagamento: Reconhecimento de Dívida com Defensor/Servidor (Fato Gerador há mais de 2 anos)">Pagamento: Reconhecimento de Dívida com Defensor/Servidor (Fato Gerador há mais de 2 anos)</option>
+                                    <option value="Patrimônio: Gestão de Acervo Bibliográfico">Patrimônio: Gestão de Acervo Bibliográfico</option>
+                                    <option value="Pessoal: Adiamento de Posse em Concurso de Servidor">Pessoal: Adiamento de Posse em Concurso de Servidor</option>
+                                    <option value="Pessoal: Adicional de Qualificação do(a) Servidor(a)">Pessoal: Adicional de Qualificação do(a) Servidor(a)</option>
+                                    <option value="Pessoal: Afastamento para Concorrer a Mandato Eletivo">Pessoal: Afastamento para Concorrer a Mandato Eletivo</option>
+                                    <option value="Pessoal: Afastamento para Curso de Formação">Pessoal: Afastamento para Curso de Formação</option>
+                                    <option value="Pessoal: Afastamento para Exercer Mandato Eletivo">Pessoal: Afastamento para Exercer Mandato Eletivo</option>
+                                    <option value="Pessoal: Afastamento para Serviço Eleitoral (TRE)">Pessoal: Afastamento para Serviço Eleitoral (TRE)</option>
+                                    <option value="Pessoal: Afastamento para servir em Organismo Internacional">Pessoal: Afastamento para servir em Organismo Internacional</option>
+                                    <option value="Pessoal: Aposentadoria - Concessão">Pessoal: Aposentadoria - Concessão</option>
+                                    <option value="Pessoal: Aposentadoria - Pensão Vitalícia">Pessoal: Aposentadoria - Pensão Vitalícia</option>
+                                    <option value="Pessoal: Aposentadoria - Revisão">Pessoal: Aposentadoria - Revisão</option>
+                                    <option value="Pessoal: Apresentação de Certificado de Curso">Pessoal: Apresentação de Certificado de Curso</option>
+                                    <option value="Pessoal: Assentamento Funcional do Defensor">Pessoal: Assentamento Funcional do Defensor</option>
+                                    <option value="Pessoal: Assentamento Funcional do Servidor">Pessoal: Assentamento Funcional do Servidor</option>
+                                    <option value="Pessoal: Atualização de Pensão">Pessoal: Atualização de Pensão</option>
+                                    <option value="Pessoal: Ausência em razão de Casamento">Pessoal: Ausência em razão de Casamento</option>
+                                    <option value="Pessoal: Ausência por Falecimento de Familiar">Pessoal: Ausência por Falecimento de Familiar</option>
+                                    <option value="Pessoal: Auxílio Saúde de Defensor Público">Pessoal: Auxílio Saúde de Defensor Público</option>
+                                    <option value="Pessoal: Auxílio Saúde de Servidor">Pessoal: Auxílio Saúde de Servidor</option>
+                                    <option value="Pessoal: Auxílio Transporte - Defensor">Pessoal: Auxílio Transporte - Defensor</option>
+                                    <option value="Pessoal: Avaliação de Desempenho Individual">Pessoal: Avaliação de Desempenho Individual</option>
+                                    <option value="Pessoal: Avaliação de Estágio Probatório de Servidor">Pessoal: Avaliação de Estágio Probatório de Servidor</option>
+                                    <option value="Pessoal: Averbação de Tempo de Serviço">Pessoal: Averbação de Tempo de Serviço</option>
+                                    <option value="Pessoal: Cadastramento de Consignatárias">Pessoal: Cadastramento de Consignatárias</option>
+                                    <option value="Pessoal: Capacitação para a Servidora e para o Servidor promovida por outra Instituição">Pessoal: Capacitação para a Servidora e para o Servidor promovida por outra Instituição</option>
+                                    <option value="Pessoal: Cessão de Defensor para outro Órgão">Pessoal: Cessão de Defensor para outro Órgão</option>
+                                    <option value="Pessoal: Cessão de Servidor para outro Órgão">Pessoal: Cessão de Servidor para outro Órgão</option>
+                                    <option value="Pessoal: Concessão e Fruição de Licença Especial de Defensor">Pessoal: Concessão e Fruição de Licença Especial de Defensor</option>
+                                    <option value="Pessoal: Concessão e Fruição de Licença Especial de Servidor">Pessoal: Concessão e Fruição de Licença Especial de Servidor</option>
+                                    <option value="Pessoal: Concessão e Revisão de Abono Permanência e Benefício de Permanência">Pessoal: Concessão e Revisão de Abono Permanência e Benefício de Permanência</option>
+                                    <option value="Pessoal: Concurso de Lotação">Pessoal: Concurso de Lotação</option>
+                                    <option value="Pessoal: Concurso de Remoção">Pessoal: Concurso de Remoção</option>
+                                    <option value="Pessoal: Concurso Público - Organização">Pessoal: Concurso Público - Organização</option>
+                                    <option value="Pessoal: Concurso Público de Defensor - Organização">Pessoal: Concurso Público de Defensor - Organização</option>
+                                    <option value="Pessoal: Controle de Frequência">Pessoal: Controle de Frequência</option>
+                                    <option value="Pessoal: Curso no Exterior - sem ônus">Pessoal: Curso no Exterior - sem ônus</option>
+                                    <option value="Pessoal: Desconto de Pensão Alimentícia">Pessoal: Desconto de Pensão Alimentícia</option>
+                                    <option value="Pessoal: Devolução/Exoneração de Servidor Cedido">Pessoal: Devolução/Exoneração de Servidor Cedido</option>
+                                    <option value="Pessoal: Emissão de Certidão de Tempo de Serviço de Ex-servidor para o Estado do Rio de Janeiro">Pessoal: Emissão de Certidão de Tempo de Serviço de Ex-servidor para o Estado do Rio de Janeiro</option>
+                                    <option value="Pessoal: Emissão de Certidão de Tempo de Serviço de Ex-servidor para Outros Entes Federativos">Pessoal: Emissão de Certidão de Tempo de Serviço de Ex-servidor para Outros Entes Federativos</option>
+                                    <option value="Pessoal: Emissão de Certidões e Declarações">Pessoal: Emissão de Certidões e Declarações</option>
+                                    <option value="Pessoal: Exoneração de Cargo Comissionado">Pessoal: Exoneração de Cargo Comissionado</option>
+                                    <option value="Pessoal: Exoneração de Cargo Efetivo">Pessoal: Exoneração de Cargo Efetivo</option>
+                                    <option value="Pessoal: Falecimento de Servidor/Defensor">Pessoal: Falecimento de Servidor/Defensor</option>
+                                    <option value="Pessoal: Férias de Defensor">Pessoal: Férias de Defensor</option>
+                                    <option value="Pessoal: Férias de Servidor(a)">Pessoal: Férias de Servidor(a)</option>
+                                    <option value="Pessoal: Folha de Pagamento">Pessoal: Folha de Pagamento</option>
+                                    <option value="Pessoal: Gratificação - Concessão/ Majoração/ Redução">Pessoal: Gratificação - Concessão/ Majoração/ Redução</option>
+                                    <option value="Pessoal: Gratificação por Encargo - Curso/Concurso">Pessoal: Gratificação por Encargo - Curso/Concurso</option>
+                                    <option value="Pessoal: Incorporação de Cargo em Comissão">Pessoal: Incorporação de Cargo em Comissão</option>
+                                    <option value="Pessoal: Isenção de Imposto de Renda">Pessoal: Isenção de Imposto de Renda</option>
+                                    <option value="Pessoal: Licença Amamentação">Pessoal: Licença Amamentação</option>
+                                    <option value="Pessoal: Licença para Tratamento da Própria Saúde">Pessoal: Licença para Tratamento da Própria Saúde</option>
+                                    <option value="Pessoal: Licença para Tratar de Interesses Particulares">Pessoal: Licença para Tratar de Interesses Particulares</option>
+                                    <option value="Pessoal: Licença Paternidade">Pessoal: Licença Paternidade</option>
+                                    <option value="Pessoal: Licença por Doença em Pessoa da Família">Pessoal: Licença por Doença em Pessoa da Família</option>
+                                    <option value="Pessoal: Licença sem Vencimento para Acompanhar Cônjuge">Pessoal: Licença sem Vencimento para Acompanhar Cônjuge</option>
+                                    <option value="Pessoal: Licença sem Vencimento para Trato de Interesse Particular de Servidor">Pessoal: Licença sem Vencimento para Trato de Interesse Particular de Servidor</option>
+                                    <option value="Pessoal: Nomeação de Cargo Comissionado">Pessoal: Nomeação de Cargo Comissionado</option>
+                                    <option value="Pessoal: Orientações e Diretrizes Gerais">Pessoal: Orientações e Diretrizes Gerais</option>
+                                    <option value="Pessoal: Pagamento de Acumulação de Defensor">Pessoal: Pagamento de Acumulação de Defensor</option>
+                                    <option value="Pessoal: Pagamento de Benefício">Pessoal: Pagamento de Benefício</option>
+                                    <option value="Pessoal: Pensão por Morte de Servidor">Pessoal: Pensão por Morte de Servidor</option>
+                                    <option value="Pessoal: Permuta de Servidores">Pessoal: Permuta de Servidores</option>
+                                    <option value="Pessoal: Progressão e Promoção (Quadro Efetivo)">Pessoal: Progressão e Promoção (Quadro Efetivo)</option>
+                                    <option value="Pessoal: Promover Defensor">Pessoal: Promover Defensor</option>
+                                    <option value="Pessoal: Provimento - Nomeação para Cargo Comissionado">Pessoal: Provimento - Nomeação para Cargo Comissionado</option>
+                                    <option value="Pessoal: Provimento - Nomeação para Cargo Efetivo">Pessoal: Provimento - Nomeação para Cargo Efetivo</option>
+                                    <option value="Pessoal: Provimento - por Readaptação">Pessoal: Provimento - por Readaptação</option>
+                                    <option value="Pessoal: Recadastramento de Servidores Inativos/Pensionistas">Pessoal: Recadastramento de Servidores Inativos/Pensionistas</option>
+                                    <option value="Pessoal: Recurso - Inaptidão em Exame Admissional">Pessoal: Recurso - Inaptidão em Exame Admissional</option>
+                                    <option value="Pessoal: Redução de Carga Horária">Pessoal: Redução de Carga Horária</option>
+                                    <option value="Pessoal: Regularização de Cessão - Devolução de Cedido">Pessoal: Regularização de Cessão - Devolução de Cedido</option>
+                                    <option value="Pessoal: Regularização de Cessão - Nomeação de Servidor Cedido">Pessoal: Regularização de Cessão - Nomeação de Servidor Cedido</option>
+                                    <option value="Pessoal: Remoção por Permuta de Titularidade">Pessoal: Remoção por Permuta de Titularidade</option>
+                                    <option value="Pessoal: Ressarcimento ao Erário">Pessoal: Ressarcimento ao Erário</option>
+                                    <option value="Pessoal: Restruturação de Cargos e Funções">Pessoal: Restruturação de Cargos e Funções</option>
+                                    <option value="Pessoal: Retribuição por Cargo em Comissão">Pessoal: Retribuição por Cargo em Comissão</option>
+                                    <option value="Pessoal: Salário-Família">Pessoal: Salário-Família</option>
+                                    <option value="Pessoal: Saúde - Prontuário Médico">Pessoal: Saúde - Prontuário Médico</option>
+                                    <option value="Pessoal: Triênio">Pessoal: Triênio</option>
+                                    <option value="Planejamento Estratégico: Elaboração do PPA e Execução do PPA">Planejamento Estratégico: Elaboração do PPA e Execução do PPA</option>
+                                    <option value="Tecnologia da Informação: Gestão de Bens e Serviços de TI">Tecnologia da Informação: Gestão de Bens e Serviços de TI</option>
+                                    <option value="Tecnologia da Informação: Normatização Interna">Tecnologia da Informação: Normatização Interna</option>
+                                    <option value="Tutela Coletiva: Procedimento de Instrução">Tutela Coletiva: Procedimento de Instrução</option>
+                                </select>
                             </div>
                         </div>
-
-                        <button type="submit" class="btn-primary" id="btnSalvar">Gravar Processo na Guia</button>
+                        <button type="submit" class="btn-primary" id="btnSalvar">Gravar Processo</button>
                     </form>
+                    <p id="contadorProcs">0 / 6 processos cadastrados</p>
                 </div>
-
                 <div class="form-container">
-                    <h3>Processos cadastrados nesta guia:</h3>
+                    <h3>Itens inseridos nesta guia:</h3>
                     <ul id="listaProcessosUI" style="list-style: none; padding: 0; margin-top: 10px;"></ul>
                 </div>
             </div>
@@ -251,41 +230,37 @@
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
         let guiaAtivaId = "";
-        let numeroGuiaAtiva = "";
-
-        onAuthStateChanged(auth, (user) => { if (!user) window.location.href = "index.html"; else carregarGuias(); });
-        document.getElementById("btnLogout").onclick = () => signOut(auth);
 
         async function carregarGuias() {
             const lista = document.getElementById("listaGuias");
-            try {
-                const q = query(collection(db, "guias"), where("status", "==", "Aberta"));
-                const snap = await getDocs(q);
-                lista.innerHTML = "";
-                
-                if (snap.empty) { lista.innerHTML = "<p>Não há guias abertas.</p>"; return; }
-
-                snap.forEach(d => {
-                    const g = d.data();
-                    const btn = document.createElement("button");
-                    btn.className = "btn-guia-item";
-                    btn.innerHTML = `Guia: ${g.numero}`;
-                    btn.onclick = () => window.abrirGuia(d.id, g.numero);
-                    lista.appendChild(btn);
-                });
-            } catch (e) { console.error(e); }
+            const q = query(collection(db, "guias"), where("status", "==", "Aberta"));
+            const snap = await getDocs(q);
+            lista.innerHTML = snap.empty ? "<p>Não há guias abertas.</p>" : "";
+            snap.forEach(d => {
+                const btn = document.createElement("button");
+                btn.className = "btn-guia-item";
+                btn.innerText = `Guia: ${d.data().numero}`;
+                btn.onclick = () => window.abrirGuia(d.id, d.data().numero);
+                lista.appendChild(btn);
+            });
         }
 
         window.abrirGuia = async (id, num) => {
             guiaAtivaId = id;
-            numeroGuiaAtiva = num;
             document.getElementById("areaProcessos").style.display = "block";
-            document.getElementById("tituloGuia").innerText = `A registar na Guia: ${num}`;
-            document.getElementById("guiaRemessa").value = num;
-            
+            document.getElementById("tituloGuia").innerText = `Registrar na Guia: ${num}`;
+            await atualizarContador(id);
             await window.atualizarLista(id);
-            document.getElementById("areaProcessos").scrollIntoView({ behavior: 'smooth' });
         };
+
+        async function atualizarContador(id) {
+            const snap = await getDocs(collection(db, "guias", id, "processos"));
+            const total = snap.size;
+            const p = document.getElementById("contadorProcs");
+            p.innerText = `${total} / 6 processos cadastrados`;
+            p.style.color = total >= 6 ? "#e74c3c" : "#27ae60";
+            return total;
+        }
 
         window.fecharArea = () => {
             document.getElementById("areaProcessos").style.display = "none";
@@ -297,47 +272,43 @@
             const container = document.getElementById("listaProcessosUI");
             const qDocs = query(collection(db, "guias", id, "processos"), orderBy("dataInsercao", "asc"));
             const snap = await getDocs(qDocs);
-            
             container.innerHTML = ""; 
-            let numItem = 1;
-            
+            let i = 1;
             snap.forEach(dSnap => {
                 const p = dSnap.data();
-                container.innerHTML += `
-                    <li style="padding: 15px; background: #f8f9fa; border-left: 4px solid #003366; margin-bottom: 10px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                        <strong>${numItem}º. Proc Físico: ${p.numeroProcessoFisico}</strong><br>
-                        <small>Interessado: ${p.interessado} | Assunto: ${p.assunto} | Folhas: ${p.qtdFolhas}</small>
-                    </li>`;
-                numItem++;
+                container.innerHTML += `<li style="padding:15px; background:#f8f9fa; border-left:4px solid #003366; margin-bottom:10px; border-radius:4px;">
+                    <strong>${i++}º. Proc: ${p.numeroProcessoFisico}</strong><br>
+                    <small>Interessado: ${p.interessado} | Assunto: ${p.assunto} | Folhas: ${p.qtdFolhas}</small>
+                </li>`;
             });
         };
 
         document.getElementById("formProcesso").onsubmit = async (e) => {
             e.preventDefault();
-            const btn = document.getElementById("btnSalvar");
-            btn.disabled = true;
-
-            const procDados = {
-                numeroProcessoFisico: document.getElementById("numeroProcessoFisico").value,
-                guiaRemessa: numeroGuiaAtiva,
-                dataAbertura: document.getElementById("dataAbertura").value,
-                dataRecebimentoProc: document.getElementById("dataRecebimentoProc").value,
-                assunto: document.getElementById("assunto").value,
-                interessado: document.getElementById("interessado").value,
-                qtdFolhas: document.getElementById("qtdFolhas").value,
-                tipoProcessoSei: document.getElementById("tipoProcessoSei").value,
-                dataInsercao: serverTimestamp(),
-                inseridoPor: auth.currentUser.email
-            };
+            const total = await atualizarContador(guiaAtivaId);
+            if (total >= 6) return alert("Limite de 6 processos atingido para esta guia!");
 
             try {
-                await addDoc(collection(db, "guias", guiaAtivaId, "processos"), procDados);
-                alert("Processo guardado com sucesso!");
+                await addDoc(collection(db, "guias", guiaAtivaId, "processos"), {
+                    numeroProcessoFisico: document.getElementById("numeroProcessoFisico").value,
+                    dataAbertura: document.getElementById("dataAbertura").value,
+                    dataRecebimentoProc: document.getElementById("dataRecebimentoProc").value,
+                    assunto: document.getElementById("assunto").value,
+                    interessado: document.getElementById("interessado").value,
+                    qtdFolhas: document.getElementById("qtdFolhas").value,
+                    tipoProcessoSei: document.getElementById("tipoProcessoSei").value,
+                    dataInsercao: serverTimestamp(),
+                    inseridoPor: auth.currentUser.email
+                });
+                alert("Processo guardado!");
                 document.getElementById("formProcesso").reset();
-                document.getElementById("guiaRemessa").value = numeroGuiaAtiva; // Mantém preenchido
-                window.atualizarLista(guiaAtivaId);
-            } catch (err) { alert("Erro ao salvar processo."); } finally { btn.disabled = false; }
+                await atualizarContador(guiaAtivaId);
+                await window.atualizarLista(guiaAtivaId);
+            } catch (err) { alert("Erro ao salvar."); }
         };
+
+        onAuthStateChanged(auth, (user) => { if (!user) window.location.href = "index.html"; else carregarGuias(); });
+        document.getElementById("btnLogout").onclick = () => signOut(auth);
     </script>
 </body>
 </html>
