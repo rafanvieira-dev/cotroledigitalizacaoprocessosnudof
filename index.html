@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="loginSection">
+    <div id="loginSection" style="display: none;">
         <div class="form-container" style="margin: 50px auto; width: 400px; text-align: center;">
             <div style="background-color: var(--primary); color: white; padding: 15px; margin: -25px -25px 30px -25px; border-radius: 8px 8px 0 0; font-weight: bold;">SISTEMA DE PROCESSOS NUDOF</div>
             <h2 style="margin-bottom: 20px;">Acesso Restrito</h2>
@@ -15,7 +15,9 @@
             <p id="erroMsg" style="color: #e74c3c; margin-top: 15px; font-weight: bold;"></p>
         </div>
     </div>
-<div id="loading" class="loading-overlay">Verificando acesso...</div>
+
+    <div id="loading" class="loading-overlay" style="display: flex; height: 100vh; justify-content: center; align-items: center; font-size: 1.5em; font-weight: bold; color: var(--primary);">Verificando acesso... Aguarde.</div>
+    
     <div id="appInterface" style="display: none;">
         <aside id="sidebar">
             <div class="sidebar-logo">CONTROLE DE DIGITALIZAÇÃO PROCESSOS NUDOF</div>
@@ -45,6 +47,9 @@
         let isAdmin = false;
 
         onAuthStateChanged(auth, (user) => {
+            // 3. Oculta o loading assim que o Firebase termina a verificação
+            document.getElementById("loading").style.display = "none";
+            
             if (user) {
                 isAdmin = EMAILS_ADMIN.includes(user.email);
                 document.getElementById("loginSection").style.display = "none";
