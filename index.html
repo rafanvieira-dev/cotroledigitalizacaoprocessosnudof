@@ -33,6 +33,16 @@
         </aside>
         <main id="content">
             <h2 class="page-title">Bem-vindo ao Sistema de Processos</h2>
+            
+            <div style="margin-bottom: 25px; background: var(--white); padding: 20px; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <h3 style="color: var(--primary); margin-bottom: 5px;">Acesso Rápido</h3>
+                    <p style="color: #666; font-size: 0.9em; margin: 0;">Acesse outros sistemas web da unidade.</p>
+                </div>
+                <a href="https://rafanvieira-dev.github.io/controle-digitalizacaonudof/index.html" target="_blank" class="btn-primary" style="text-decoration: none; width: auto; padding: 12px 20px; background-color: var(--secondary); display: inline-block;">
+                    🔗 Digitalização de Documentos
+                </a>
+            </div>
             <div id="mainDisplay"></div>
         </main>
     </div>
@@ -47,7 +57,6 @@
         let isAdmin = false;
 
         onAuthStateChanged(auth, (user) => {
-            // 3. Oculta o loading assim que o Firebase termina a verificação
             document.getElementById("loading").style.display = "none";
             
             if (user) {
@@ -84,9 +93,16 @@
                     // Botões de Admin
                     let painelAdmin = "";
                     if (isAdmin) {
+                        let btnDesarquivar = "";
+                        // O botão de desarquivar só aparece se o status for "Arquivada"
+                        if (statusClass === "arquivada") {
+                            btnDesarquivar = `<button onclick="window.desarquivarGuia('${d.id}', '${g.numero}')" style="background:#f39c12; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85em;">↩️ Desarquivar</button>`;
+                        }
+
                         painelAdmin = `
                         <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border); display: flex; gap: 10px;">
                             <button onclick="window.editarGuia('${d.id}', '${g.numero}', '${g.unidade}')" style="background:var(--accent); color:#333; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85em;">✏️ Editar Guia</button>
+                            ${btnDesarquivar}
                             <button onclick="window.excluirGuia('${d.id}', '${g.numero}')" style="background:#e74c3c; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85em;">🗑️ Excluir Guia</button>
                         </div>`;
                     }
@@ -122,14 +138,28 @@
             } catch (e) { alert("Erro ao atualizar guia."); }
         };
 
+        // Nova função de Desarquivar na tela Inicial
+        window.desarquivarGuia = async (id, num) => {
+            if(confirm(`Deseja DESARQUIVAR a Guia ${num}?\nEla sairá do Acervo e voltará para o status "Aberta", permitindo adicionar ou remover processos.`)) {
+                try {
+                    await updateDoc(doc(db, "guias", id), {
+                        status: "Aberta",
+                        locCaixaGuia: "",
+                        locCaixaProc: "",
+                        dataArquivamentoSistema: ""
+                    });
+                    alert("Guia Desarquivada! Ela voltou para o status 'Aberta'.");
+                    carregarHistorico();
+                } catch(e) { alert("Erro ao desarquivar."); }
+            }
+        };
+
         window.excluirGuia = async (id, num) => {
             if (confirm(`🚨 PERIGO: Deseja EXCLUIR DEFINITIVAMENTE a Guia ${num} e TODOS os processos dentro dela?\nEsta ação não tem volta!`)) {
                 try {
-                    // 1. Apaga os processos de dentro da guia primeiro
                     const procs = await getDocs(collection(db, "guias", id, "processos"));
                     const promessas = procs.docs.map(p => deleteDoc(doc(db, "guias", id, "processos", p.id)));
                     await Promise.all(promessas);
-                    // 2. Apaga a guia
                     await deleteDoc(doc(db, "guias", id));
                     alert("Guia excluída do sistema!");
                     carregarHistorico();
