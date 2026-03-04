@@ -1,44 +1,119 @@
-<script type="module">
-    // ... imports existentes ...
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Digitalização de Processos - NUDOF</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .guia-card-arquivar { background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 6px solid var(--secondary); }
+        .tabela-docs-arquivamento { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.82em; }
+        .tabela-docs-arquivamento th, .tabela-docs-arquivamento td { padding: 8px; border: 1px solid #ccc; vertical-align: top; }
+        input, select { width: 100%; padding: 6px; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+    <div id="appInterface">
+        <aside id="sidebar">
+            <div class="sidebar-logo">PROCESSOS NUDOF</div>
+            <nav>
+                <a href="index.html">🏠 Início / Histórico</a>
+                <a href="guia.html">➕ Nova Guia</a>
+                <a href="processos.html">📄 Inserir Processos</a>
+                <a href="digitalizacao.html" class="ativo">🖨️ Digitalização e SEI</a>
+                <a href="arquivamentoFisico.html">🗄️ Arquivar Físico</a>
+                <a href="acervo.html">📚 Consulta de Acervo</a>
+                <button id="btnLogout" class="btn-sair">🚪 Sair do Sistema</button>
+            </nav>
+        </aside>
 
-    document.getElementById("formDadosArquivamento").onsubmit = async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById("btnConfirmarArq");
-        btn.disabled = true;
-        btn.innerText = "Salvando...";
+        <main id="content">
+            <h2 class="page-title">Digitalização e Inserção no SEI</h2>
+            <div id="listaParaArquivar"><p>A procurar guias abertas...</p></div>
+        </main>
+    </div>
 
-        try {
-            // 1. Atualiza todos os processos primeiro
-            const promessas = processosDaGuia.map(id => {
-                const qtd = document.getElementById(`qtdImg_${id}`).value;
-                if (!qtd || qtd <= 0) throw new Error("Qtd de imagens inválida");
-                
-                return updateDoc(doc(db, "guias", guiaAtualId, "processos", id), {
+    <div id="modalArquivar" class="modal">
+        <div class="modal-content" style="width: 98%; max-width: 1400px;">
+            <span class="close-btn" id="closeArquivar" style="float: right; cursor: pointer; font-size: 1.5em;">&times;</span>
+            <h3 id="tituloModalArquivar" style="margin-bottom: 15px; color: var(--primary);"></h3>
+            <form id="formDadosArquivamento">
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ddd; overflow-x: auto;">
+                    <div id="areaDocumentosArquivar"></div>
+                </div>
+                <button type="submit" class="btn-primary" id="btnConfirmarArq" style="margin-top:15px;">✅ CONCLUIR DIGITALIZAÇÃO</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db, auth } from "./firebase.js";
+        import { collection, getDocs, updateDoc, doc, query, where } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+
+        let guiaAtualId = "";
+        let processosDaGuia = [];
+
+        async function carregar() {
+            const container = document.getElementById("listaParaArquivar");
+            try {
+                const q = query(collection(db, "guias"), where("status", "==", "Aberta"));
+                const snap = await getDocs(q);
+                let guias = [];
+                for (const d of snap.docs) {
+                    const procsSnap = await getDocs(collection(db, "guias", d.id, "processos"));
+                    if (procsSnap.size > 0) guias.push({ id: d.id, ...d.data() });
+                }
+                container.innerHTML = guias.length === 0 ? "<p>Nenhuma guia pendente.</p>" : ""; 
+                guias.forEach(g => {
+                    const div = document.createElement("div"); div.className = "guia-card-arquivar";
+                    div.innerHTML = `<div><strong>Guia ${g.numero}</strong><br><small>${g.unidade}</small></div><button onclick="window.abrirDigitalizacao('${g.id}', '${g.numero}')" style="background:var(--secondary); color:white; padding:8px 15px; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">🖨️ Iniciar</button>`;
+                    container.appendChild(div);
+                });
+            } catch (err) { }
+        }
+
+        window.abrirDigitalizacao = async (id, num) => {
+            guiaAtualId = id; processosDaGuia = [];
+            document.getElementById("tituloModalArquivar").innerText = "Digitalização - Guia: " + num;
+            document.getElementById("modalArquivar").style.display = "block";
+            try {
+                const snap = await getDocs(collection(db, "guias", id, "processos"));
+                let html = `<table class="tabela-docs-arquivamento"><thead><tr><th>Nº Processo</th><th>Data Digit.</th><th>Data Inserção SEI</th><th>Qtd. Imagens</th><th>Anexo</th><th>Págs Anexo</th></tr></thead><tbody>`;
+                snap.forEach(docSnap => {
+                    processosDaGuia.push(docSnap.id);
+                    const p = docSnap.data();
+                    html += `<tr><td><b>${p.numeroProcessoFisico}</b></td>
+                        <td><input type="date" id="dataDig_${docSnap.id}" required></td>
+                        <td><input type="date" id="dataSei_${docSnap.id}" required></td>
+                        <td><input type="number" id="qtdImg_${docSnap.id}" required></td>
+                        <td><select id="anexo_${docSnap.id}"><option value="Nenhum">Nenhum</option><option value="CD">CD</option><option value="DVD">DVD</option><option value="Pen Drive">Pen Drive</option></select></td>
+                        <td><input type="number" id="pgAnexo_${docSnap.id}"></td></tr>`;
+                });
+                document.getElementById("areaDocumentosArquivar").innerHTML = html + "</tbody></table>";
+            } catch (e) { }
+        };
+
+        document.getElementById("formDadosArquivamento").onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById("btnConfirmarArq");
+            btn.disabled = true; btn.innerText = "A guardar...";
+            try {
+                const promessas = processosDaGuia.map(id => updateDoc(doc(db, "guias", guiaAtualId, "processos", id), {
                     dataDigitalizacao: document.getElementById(`dataDig_${id}`).value,
                     dataInsercaoSEI: document.getElementById(`dataSei_${id}`).value,
-                    qtdImagensDigitalizadas: qtd,
+                    qtdImagensDigitalizadas: document.getElementById(`qtdImg_${id}`).value,
                     tipoAnexo: document.getElementById(`anexo_${id}`).value,
                     qtdPaginasAnexo: document.getElementById(`pgAnexo_${id}`).value || "0"
-                });
-            });
+                }));
+                await Promise.all(promessas);
+                await updateDoc(doc(db, "guias", guiaAtualId), { status: "Digitalizada", operadorDigitalizacao: auth.currentUser.email });
+                alert("Concluído!"); document.getElementById("modalArquivar").style.display = "none"; carregar();
+            } catch (err) { alert("Erro ao salvar."); } finally { btn.disabled = false; btn.innerText = "✅ CONCLUIR DIGITALIZAÇÃO"; }
+        };
 
-            await Promise.all(promessas);
-
-            // 2. Só altera status da guia se os processos forem salvos com sucesso
-            await updateDoc(doc(db, "guias", guiaAtualId), { 
-                status: "Digitalizada", 
-                operadorDigitalizacao: auth.currentUser.email,
-                dataConclusaoDigitalizacao: new Date().toISOString()
-            });
-
-            alert("Digitalização concluída com sucesso!");
-            document.getElementById("modalArquivar").style.display = "none";
-            carregar();
-        } catch (err) {
-            console.error(err);
-            alert("Erro: Verifique se todos os campos de imagens foram preenchidos.");
-            btn.disabled = false;
-            btn.innerText = "✅ CONCLUIR DIGITALIZAÇÃO";
-        }
-    };
-</script>
+        document.getElementById("closeArquivar").onclick = () => document.getElementById("modalArquivar").style.display = "none";
+        onAuthStateChanged(auth, (user) => { if (user) carregar(); });
+        document.getElementById("btnLogout").onclick = () => signOut(auth);
+    </script>
+</body>
+</html>
