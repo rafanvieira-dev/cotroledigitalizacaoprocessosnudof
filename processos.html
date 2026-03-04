@@ -93,7 +93,8 @@
 
     <script type="module">
         import { db, auth } from "./firebase.js";
-        import { collection, getDocs, addDoc, updateDoc, doc, deleteDoc, getDoc, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+        // NOTA: collectionGroup foi adicionado na importação abaixo
+        import { collection, getDocs, addDoc, updateDoc, doc, deleteDoc, getDoc, query, where, orderBy, serverTimestamp, collectionGroup } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
         const EMAILS_ADMIN = ["rafael.nascimento-vieira@defensoria.rj.def.br"];
@@ -119,13 +120,11 @@
             const recentes = JSON.parse(localStorage.getItem("recentesSei") || "[]");
             datalist.innerHTML = "";
             
-            // Coloca os recentes no topo sem marcadores
             if (recentes.length > 0) {
                 recentes.forEach(tipo => { datalist.innerHTML += `<option value="${tipo}">`; });
                 datalist.innerHTML += `<option value="-------------------------------------------" disabled>`;
             }
             
-            // Coloca o resto da lista (que não está nos recentes) embaixo
             TIPOS_SEI_BASE.forEach(tipo => {
                 if (!recentes.includes(tipo)) { datalist.innerHTML += `<option value="${tipo}">`; }
             });
@@ -137,8 +136,8 @@
             
             let recentes = JSON.parse(localStorage.getItem("recentesSei") || "[]");
             recentes = recentes.filter(r => r !== tipoLimpo);
-            recentes.unshift(tipoLimpo); // Adiciona no começo
-            if (recentes.length > 5) recentes.pop(); // Mantém apenas os 5 últimos
+            recentes.unshift(tipoLimpo); 
+            if (recentes.length > 5) recentes.pop(); 
             
             localStorage.setItem("recentesSei", JSON.stringify(recentes));
             atualizarDatalistSei();
@@ -266,13 +265,44 @@
             const dataAb = document.getElementById("dataAbertura").value;
             const dataRec = document.getElementById("dataRecebimentoProc").value;
             const tipoSei = document.getElementById("tipoProcessoSei").value.toUpperCase();
+            const numeroDigitado = document.getElementById("numeroProcessoFisico").value.trim();
             
             if (dataAb.length < 10 || dataRec.length < 10) return alert("Preencha as datas completamente.");
             
+            // ==========================================
+            // NOVA REGRA: VALIDAÇÃO DE NÚMERO DUPLICADO
+            // ==========================================
+            try {
+                const btn = document.getElementById("btnSalvar");
+                btn.disabled = true;
+                btn.innerText = "Verificando...";
+
+                // Procura em TODOS os processos cadastrados no sistema (em qualquer guia)
+                const qDuplicata = query(collectionGroup(db, "processos"), where("numeroProcessoFisico", "==", numeroDigitado));
+                const snapDuplicata = await getDocs(qDuplicata);
+                
+                let existeDuplicata = false;
+                snapDuplicata.forEach(docSnap => {
+                    // Ignora se o documento encontrado for exatamente o mesmo que estamos editando agora
+                    if (processoEditandoId !== docSnap.id) {
+                        existeDuplicata = true;
+                    }
+                });
+
+                if (existeDuplicata) {
+                    btn.disabled = false;
+                    btn.innerText = processoEditandoId ? "🔄 ATUALIZAR PROCESSO" : "Gravar Processo";
+                    return alert(`🚨 AVISO: O processo nº ${numeroDigitado} já foi cadastrado no sistema!\nNão é permitida a inserção de duplicatas.`);
+                }
+            } catch (error) {
+                console.error("Erro ao verificar duplicidade:", error);
+            }
+            // ==========================================
+
             if (processoEditandoId) {
                 try {
                     await updateDoc(doc(db, "guias", guiaAtivaId, "processos", processoEditandoId), {
-                        numeroProcessoFisico: document.getElementById("numeroProcessoFisico").value,
+                        numeroProcessoFisico: numeroDigitado,
                         dataAbertura: converterDataParaISO(dataAb),
                         dataRecebimentoProc: converterDataParaISO(dataRec),
                         assunto: document.getElementById("assunto").value,
@@ -283,15 +313,19 @@
                     salvarRecente(tipoSei);
                     processoEditandoId = null;
                     document.getElementById("btnSalvar").innerText = "Gravar Processo";
+                    document.getElementById("btnSalvar").disabled = false;
                     document.getElementById("formProcesso").reset();
                     await atualizarContador(guiaAtivaId);
                     await window.atualizarLista(guiaAtivaId);
-                } catch (err) { alert("Erro ao atualizar."); }
+                } catch (err) { 
+                    alert("Erro ao atualizar."); 
+                    document.getElementById("btnSalvar").disabled = false;
+                }
             } else {
                 try {
                     const dataRecGuardar = document.getElementById("dataRecebimentoProc").value;
                     await addDoc(collection(db, "guias", guiaAtivaId, "processos"), {
-                        numeroProcessoFisico: document.getElementById("numeroProcessoFisico").value,
+                        numeroProcessoFisico: numeroDigitado,
                         dataAbertura: converterDataParaISO(dataAb),
                         dataRecebimentoProc: converterDataParaISO(dataRec),
                         assunto: document.getElementById("assunto").value,
@@ -306,7 +340,10 @@
                     document.getElementById("dataRecebimentoProc").value = dataRecGuardar;
                     await atualizarContador(guiaAtivaId);
                     await window.atualizarLista(guiaAtivaId);
-                } catch (err) { alert("Erro ao salvar."); }
+                } catch (err) { 
+                    alert("Erro ao salvar."); 
+                    document.getElementById("btnSalvar").disabled = false;
+                }
             }
         };
         document.getElementById("btnLogout").onclick = () => signOut(auth);
