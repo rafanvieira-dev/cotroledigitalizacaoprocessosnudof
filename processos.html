@@ -37,17 +37,26 @@
                     <form id="formProcesso">
                         <label>Nº do Processo Físico:</label>
                         <input type="text" id="numeroProcessoFisico" placeholder="Ex: 0000000-00.2026.8.19.0000" required>
+                        
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                            <div><label>Data de Abertura:</label><input type="date" id="dataAbertura" required></div>
-                            <div><label>Data de Recebimento:</label><input type="date" id="dataRecebimentoProc" required></div>
+                            <div>
+                                <label>Data de Abertura:</label>
+                                <input type="text" id="dataAbertura" inputmode="numeric" placeholder="DD/MM/AAAA" oninput="window.mascaraData(this)" maxlength="10" required>
+                            </div>
+                            <div>
+                                <label>Data de Recebimento:</label>
+                                <input type="text" id="dataRecebimentoProc" inputmode="numeric" placeholder="DD/MM/AAAA" oninput="window.mascaraData(this)" maxlength="10" required>
+                            </div>
                         </div>
+
                         <label>Assunto (Capa):</label><input type="text" id="assunto" required>
                         <label>Interessado:</label><input type="text" id="interessado" required>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 15px;">
                             <div><label>Qtd. Folhas:</label><input type="number" id="qtdFolhas" required></div>
                             <div class="search-select-container">
                                 <label>Tipo de Processo no SEI:</label>
                                 <input type="text" id="searchTipoProcesso" placeholder="Pesquisar..." onkeyup="window.filterTypes()">
+                                
                                 <select id="tipoProcessoSei" required>
                                     <option value="" disabled selected>Selecione...</option>
                                     <option value="Administração Geral: Ação Rescisória">Administração Geral: Ação Rescisória</option>
@@ -222,6 +231,22 @@
     </div>
 
     <script>
+        // FUNÇÃO NOVA: Máscara para as datas
+        window.mascaraData = function(input) {
+            let v = input.value.replace(/\D/g, ''); // Remove letras e símbolos
+            if (v.length > 8) v = v.slice(0, 8); // Máximo 8 dígitos
+            
+            // Coloca as barras automaticamente
+            if (v.length >= 5) {
+                input.value = `${v.slice(0, 2)}/${v.slice(2, 4)}/${v.slice(4)}`;
+            } else if (v.length >= 3) {
+                input.value = `${v.slice(0, 2)}/${v.slice(2)}`;
+            } else {
+                input.value = v;
+            }
+        };
+
+        // Função de filtro do Select mantida!
         window.filterTypes = function() {
             const input = document.getElementById('searchTipoProcesso');
             const filter = input.value.toUpperCase();
@@ -249,6 +274,12 @@
             snap.forEach(d => {
                 const btn = document.createElement("button");
                 btn.className = "btn-guia-item";
+                btn.style.backgroundColor = "var(--primary)";
+                btn.style.color = "white";
+                btn.style.padding = "10px";
+                btn.style.margin = "5px";
+                btn.style.border = "none";
+                btn.style.borderRadius = "5px";
                 btn.innerText = `Guia: ${d.data().numero}`;
                 btn.onclick = () => window.abrirGuia(d.id, d.data().numero);
                 lista.appendChild(btn);
@@ -303,13 +334,31 @@
             });
         };
 
+        // FUNÇÃO NOVA: Inverte a data para o Firebase organizar de forma correta (AAAA-MM-DD)
+        const converterDataParaISO = (dataBr) => {
+            if (!dataBr) return "";
+            const partes = dataBr.split('/');
+            return partes.length === 3 ? `${partes[2]}-${partes[1]}-${partes[0]}` : dataBr;
+        };
+
         document.getElementById("formProcesso").onsubmit = async (e) => {
             e.preventDefault();
+            
+            // Verifica se a data foi digitada completa
+            const dataAb = document.getElementById("dataAbertura").value;
+            const dataRec = document.getElementById("dataRecebimentoProc").value;
+            if (dataAb.length < 10 || dataRec.length < 10) {
+                return alert("Por favor, preencha as datas completamente no formato DD/MM/AAAA.");
+            }
+
             try {
                 await addDoc(collection(db, "guias", guiaAtivaId, "processos"), {
                     numeroProcessoFisico: document.getElementById("numeroProcessoFisico").value,
-                    dataAbertura: document.getElementById("dataAbertura").value,
-                    dataRecebimentoProc: document.getElementById("dataRecebimentoProc").value,
+                    
+                    // Salvando as datas formatadas
+                    dataAbertura: converterDataParaISO(dataAb),
+                    dataRecebimentoProc: converterDataParaISO(dataRec),
+                    
                     assunto: document.getElementById("assunto").value,
                     interessado: document.getElementById("interessado").value,
                     qtdFolhas: document.getElementById("qtdFolhas").value,
