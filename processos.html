@@ -39,14 +39,8 @@
                         <input type="text" id="numeroProcessoFisico" placeholder="Ex: 0000000-00.2026.8.19.0000" required>
                         
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                            <div>
-                                <label>Data de Abertura:</label>
-                                <input type="text" id="dataAbertura" inputmode="numeric" placeholder="DD/MM/AAAA" oninput="window.mascaraData(this)" maxlength="10" required>
-                            </div>
-                            <div>
-                                <label>Data de Recebimento:</label>
-                                <input type="text" id="dataRecebimentoProc" inputmode="numeric" placeholder="DD/MM/AAAA" oninput="window.mascaraData(this)" maxlength="10" required>
-                            </div>
+                            <div><label>Data de Abertura:</label><input type="text" id="dataAbertura" inputmode="numeric" placeholder="DD/MM/AAAA" oninput="window.mascaraData(this)" maxlength="10" required></div>
+                            <div><label>Data de Recebimento:</label><input type="text" id="dataRecebimentoProc" inputmode="numeric" placeholder="DD/MM/AAAA" oninput="window.mascaraData(this)" maxlength="10" required></div>
                         </div>
 
                         <label>Assunto (Capa):</label><input type="text" id="assunto" required>
@@ -231,22 +225,14 @@
     </div>
 
     <script>
-        // FUNÇÃO NOVA: Máscara para as datas
         window.mascaraData = function(input) {
-            let v = input.value.replace(/\D/g, ''); // Remove letras e símbolos
-            if (v.length > 8) v = v.slice(0, 8); // Máximo 8 dígitos
-            
-            // Coloca as barras automaticamente
-            if (v.length >= 5) {
-                input.value = `${v.slice(0, 2)}/${v.slice(2, 4)}/${v.slice(4)}`;
-            } else if (v.length >= 3) {
-                input.value = `${v.slice(0, 2)}/${v.slice(2)}`;
-            } else {
-                input.value = v;
-            }
+            let v = input.value.replace(/\D/g, '');
+            if (v.length > 8) v = v.slice(0, 8);
+            if (v.length >= 5) { input.value = `${v.slice(0, 2)}/${v.slice(2, 4)}/${v.slice(4)}`; } 
+            else if (v.length >= 3) { input.value = `${v.slice(0, 2)}/${v.slice(2)}`; } 
+            else { input.value = v; }
         };
 
-        // Função de filtro do Select mantida!
         window.filterTypes = function() {
             const input = document.getElementById('searchTipoProcesso');
             const filter = input.value.toUpperCase();
@@ -261,10 +247,23 @@
 
     <script type="module">
         import { db, auth } from "./firebase.js";
-        import { collection, getDocs, addDoc, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+        import { collection, getDocs, addDoc, updateDoc, doc, deleteDoc, getDoc, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
+        // 🚨 COLOQUE AQUI OS E-MAILS DE QUEM É ADMINISTRADOR
+        const EMAILS_ADMIN = ["seu_email@gmail.com", "admin@defensoria.rj.def.br"];
+        let isAdmin = false;
+
         let guiaAtivaId = "";
+        let processoEditandoId = null;
+
+        onAuthStateChanged(auth, (user) => { 
+            if (!user) window.location.href = "index.html"; 
+            else {
+                isAdmin = EMAILS_ADMIN.includes(user.email);
+                carregarGuias(); 
+            }
+        });
 
         async function carregarGuias() {
             const lista = document.getElementById("listaGuias");
@@ -274,12 +273,7 @@
             snap.forEach(d => {
                 const btn = document.createElement("button");
                 btn.className = "btn-guia-item";
-                btn.style.backgroundColor = "var(--primary)";
-                btn.style.color = "white";
-                btn.style.padding = "10px";
-                btn.style.margin = "5px";
-                btn.style.border = "none";
-                btn.style.borderRadius = "5px";
+                btn.style.cssText = "background:var(--primary); color:white; padding:10px; margin:5px; border:none; border-radius:5px; cursor:pointer;";
                 btn.innerText = `Guia: ${d.data().numero}`;
                 btn.onclick = () => window.abrirGuia(d.id, d.data().numero);
                 lista.appendChild(btn);
@@ -300,23 +294,28 @@
             const p = document.getElementById("contadorProcs");
             const btn = document.getElementById("btnSalvar");
             p.innerText = `${total} / 6 processos cadastrados`;
-            if (total >= 6) {
+            
+            if (total >= 6 && !processoEditandoId) {
                 p.style.color = "#e74c3c";
                 btn.disabled = true;
                 btn.innerText = "LIMITE DE 6 ATINGIDO";
             } else {
                 p.style.color = "var(--secondary)";
                 btn.disabled = false;
-                btn.innerText = "Gravar Processo";
+                if (!processoEditandoId) btn.innerText = "Gravar Processo";
             }
+            return total;
         }
 
         window.fecharArea = () => {
             document.getElementById("areaProcessos").style.display = "none";
-            guiaAtivaId = "";
+            guiaAtivaId = ""; processoEditandoId = null;
             document.getElementById("formProcesso").reset();
             document.getElementById("searchTipoProcesso").value = "";
             window.filterTypes();
+            const btn = document.getElementById("btnSalvar");
+            btn.innerText = "Gravar Processo";
+            btn.style.cssText = "background:var(--primary); color:white;";
         };
 
         window.atualizarLista = async (id) => {
@@ -327,14 +326,73 @@
             let i = 1;
             snap.forEach(dSnap => {
                 const p = dSnap.data();
-                container.innerHTML += `<li style="padding:15px; background:#f8f9fa; border-left:4px solid var(--primary); margin-bottom:10px; border-radius:4px;">
-                    <strong>${i++}º. Proc: ${p.numeroProcessoFisico}</strong><br>
-                    <small>Interessado: ${p.interessado} | Assunto: ${p.assunto} | Folhas: ${p.qtdFolhas}</small>
+                
+                // Botão de Excluir SÓ APARECE se a pessoa for Administradora
+                let btnExcluir = isAdmin ? `<button type="button" onclick="window.excluirProcesso('${dSnap.id}')" style="background:#e74c3c; color:white; padding:8px 12px; border:none; border-radius:4px; cursor:pointer; margin-left:5px; font-weight:bold;">🗑️ Excluir</button>` : "";
+
+                container.innerHTML += `<li style="padding:15px; background:#f8f9fa; border-left:4px solid var(--primary); margin-bottom:10px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong>${i++}º. Proc: ${p.numeroProcessoFisico}</strong><br>
+                        <small>Interessado: ${p.interessado} | Assunto: ${p.assunto} | Folhas: ${p.qtdFolhas}</small>
+                    </div>
+                    <div>
+                        <button type="button" onclick="window.editarProcesso('${dSnap.id}')" style="background:var(--accent); color:#333; padding:8px 12px; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">✏️ Editar</button>
+                        ${btnExcluir}
+                    </div>
                 </li>`;
             });
         };
 
-        // FUNÇÃO NOVA: Inverte a data para o Firebase organizar de forma correta (AAAA-MM-DD)
+        const converterISOParaData = (iso) => {
+            if (!iso) return "";
+            const partes = iso.split('-');
+            return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : iso;
+        };
+
+        window.editarProcesso = async (procId) => {
+            try {
+                const docRef = doc(db, "guias", guiaAtivaId, "processos", procId);
+                const procSnap = await getDoc(docRef);
+                if (procSnap.exists()) {
+                    const p = procSnap.data();
+                    document.getElementById("numeroProcessoFisico").value = p.numeroProcessoFisico;
+                    document.getElementById("dataAbertura").value = converterISOParaData(p.dataAbertura);
+                    document.getElementById("dataRecebimentoProc").value = converterISOParaData(p.dataRecebimentoProc);
+                    document.getElementById("assunto").value = p.assunto;
+                    document.getElementById("interessado").value = p.interessado;
+                    document.getElementById("qtdFolhas").value = p.qtdFolhas;
+                    document.getElementById("searchTipoProcesso").value = "";
+                    window.filterTypes();
+                    document.getElementById("tipoProcessoSei").value = p.tipoProcessoSei;
+
+                    processoEditandoId = procId;
+                    const btn = document.getElementById("btnSalvar");
+                    btn.disabled = false;
+                    btn.innerText = "🔄 Atualizar Processo";
+                    btn.style.cssText = "background:var(--accent); color:#333;";
+                    window.scrollTo({ top: 0, behavior: 'smooth' }); 
+                }
+            } catch (err) { alert("Erro ao carregar dados para edição."); }
+        };
+
+        window.excluirProcesso = async (procId) => {
+            if(confirm("Tem certeza que deseja excluir este processo desta guia?")) {
+                try {
+                    await deleteDoc(doc(db, "guias", guiaAtivaId, "processos", procId));
+                    alert("Processo excluído!");
+                    await atualizarContador(guiaAtivaId);
+                    await window.atualizarLista(guiaAtivaId);
+                    if(processoEditandoId === procId) {
+                        document.getElementById("formProcesso").reset();
+                        processoEditandoId = null;
+                        const btn = document.getElementById("btnSalvar");
+                        btn.innerText = "Gravar Processo";
+                        btn.style.cssText = "background:var(--primary); color:white;";
+                    }
+                } catch (err) { alert("Erro ao excluir o processo."); }
+            }
+        };
+
         const converterDataParaISO = (dataBr) => {
             if (!dataBr) return "";
             const partes = dataBr.split('/');
@@ -343,39 +401,57 @@
 
         document.getElementById("formProcesso").onsubmit = async (e) => {
             e.preventDefault();
-            
-            // Verifica se a data foi digitada completa
             const dataAb = document.getElementById("dataAbertura").value;
             const dataRec = document.getElementById("dataRecebimentoProc").value;
-            if (dataAb.length < 10 || dataRec.length < 10) {
-                return alert("Por favor, preencha as datas completamente no formato DD/MM/AAAA.");
-            }
+            if (dataAb.length < 10 || dataRec.length < 10) return alert("Preencha as datas completamente (DD/MM/AAAA).");
 
-            try {
-                await addDoc(collection(db, "guias", guiaAtivaId, "processos"), {
-                    numeroProcessoFisico: document.getElementById("numeroProcessoFisico").value,
-                    
-                    // Salvando as datas formatadas
-                    dataAbertura: converterDataParaISO(dataAb),
-                    dataRecebimentoProc: converterDataParaISO(dataRec),
-                    
-                    assunto: document.getElementById("assunto").value,
-                    interessado: document.getElementById("interessado").value,
-                    qtdFolhas: document.getElementById("qtdFolhas").value,
-                    tipoProcessoSei: document.getElementById("tipoProcessoSei").value,
-                    dataInsercao: serverTimestamp(),
-                    inseridoPor: auth.currentUser.email
-                });
-                alert("Processo guardado!");
-                document.getElementById("formProcesso").reset();
-                document.getElementById("searchTipoProcesso").value = "";
-                window.filterTypes();
-                await atualizarContador(guiaAtivaId);
-                await window.atualizarLista(guiaAtivaId);
-            } catch (err) { alert("Erro ao salvar."); }
+            if (processoEditandoId) {
+                try {
+                    await updateDoc(doc(db, "guias", guiaAtivaId, "processos", processoEditandoId), {
+                        numeroProcessoFisico: document.getElementById("numeroProcessoFisico").value,
+                        dataAbertura: converterDataParaISO(dataAb),
+                        dataRecebimentoProc: converterDataParaISO(dataRec),
+                        assunto: document.getElementById("assunto").value,
+                        interessado: document.getElementById("interessado").value,
+                        qtdFolhas: document.getElementById("qtdFolhas").value,
+                        tipoProcessoSei: document.getElementById("tipoProcessoSei").value
+                    });
+                    alert("Processo atualizado com sucesso!");
+                    processoEditandoId = null;
+                    const btn = document.getElementById("btnSalvar");
+                    btn.innerText = "Gravar Processo";
+                    btn.style.cssText = "background:var(--primary); color:white;";
+                    document.getElementById("formProcesso").reset();
+                    document.getElementById("searchTipoProcesso").value = "";
+                    window.filterTypes();
+                    await atualizarContador(guiaAtivaId);
+                    await window.atualizarLista(guiaAtivaId);
+                } catch (err) { alert("Erro ao atualizar."); }
+            } else {
+                const total = await atualizarContador(guiaAtivaId);
+                if (total >= 6) return alert("Limite de 6 processos atingido para esta guia!");
+                try {
+                    await addDoc(collection(db, "guias", guiaAtivaId, "processos"), {
+                        numeroProcessoFisico: document.getElementById("numeroProcessoFisico").value,
+                        dataAbertura: converterDataParaISO(dataAb),
+                        dataRecebimentoProc: converterDataParaISO(dataRec),
+                        assunto: document.getElementById("assunto").value,
+                        interessado: document.getElementById("interessado").value,
+                        qtdFolhas: document.getElementById("qtdFolhas").value,
+                        tipoProcessoSei: document.getElementById("tipoProcessoSei").value,
+                        dataInsercao: serverTimestamp(),
+                        inseridoPor: auth.currentUser.email
+                    });
+                    alert("Processo guardado!");
+                    document.getElementById("formProcesso").reset();
+                    document.getElementById("searchTipoProcesso").value = "";
+                    window.filterTypes();
+                    await atualizarContador(guiaAtivaId);
+                    await window.atualizarLista(guiaAtivaId);
+                } catch (err) { alert("Erro ao salvar."); }
+            }
         };
 
-        onAuthStateChanged(auth, (user) => { if (!user) window.location.href = "index.html"; else carregarGuias(); });
         document.getElementById("btnLogout").onclick = () => signOut(auth);
     </script>
 </body>
