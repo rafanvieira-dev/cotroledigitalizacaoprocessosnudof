@@ -5,14 +5,50 @@
     <title>Digitalização de Processos - NUDOF</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .tabela-docs-arquivamento { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.82em; }
-        .tabela-docs-arquivamento th, .tabela-docs-arquivamento td { padding: 8px; border: 1px solid var(--border); vertical-align: top; }
-        input, select { width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid var(--border); border-radius: 4px; }
+        /* Tabela com layout fixo para uniformidade */
+        .tabela-docs-arquivamento { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 15px; 
+            font-size: 0.82em; 
+            table-layout: fixed; /* Garante que as larguras das colunas sejam respeitadas */
+        }
         
-        /* Ajustes de largura solicitados */
-        .col-qnt-img { width: 80px; }
-        .col-pg-anexo { width: 50px; } /* Aproximadamente 2 caracteres */
-        .col-obs { min-width: 150px; }
+        .tabela-docs-arquivamento th { 
+            background: var(--primary); 
+            color: white; 
+            padding: 12px 5px; 
+            border: 1px solid var(--border); 
+            text-align: center; 
+            vertical-align: middle;
+            word-wrap: break-word; /* Permite quebra de linha no cabeçalho se necessário */
+        }
+
+        .tabela-docs-arquivamento td { 
+            padding: 8px 4px; 
+            border: 1px solid var(--border); 
+            vertical-align: middle; 
+            text-align: center;
+        }
+
+        input, select { 
+            width: 100%; 
+            padding: 8px 5px; 
+            box-sizing: border-box; 
+            border: 1px solid var(--border); 
+            border-radius: 4px; 
+            font-size: 1em;
+        }
+
+        /* Classes de definição de largura para uniformidade */
+        .col-proc { width: 16%; text-align: left !important; }
+        .col-data { width: 12%; }
+        .col-qnt { width: 10%; }
+        .col-anexo { width: 11%; }
+        .col-obs { width: 29%; }
+
+        /* Estilo para campos numéricos centralizados */
+        input[type="number"] { text-align: center; }
     </style>
 </head>
 <body>
@@ -57,7 +93,6 @@
         let guiaAtualId = "";
         let processosDaGuia = [];
 
-        // Função para replicar dados da primeira linha para as demais
         window.replicarDadosPrimeiraLinha = (tipo, valor) => {
             processosDaGuia.forEach((id, index) => {
                 if (index > 0) {
@@ -108,15 +143,15 @@
             try {
                 const snap = await getDocs(collection(db, "guias", id, "processos"));
                 let html = `<table class="tabela-docs-arquivamento">
-                    <thead style="background:var(--primary); color:white;">
+                    <thead>
                         <tr>
-                            <th>Nº Processo</th>
-                            <th>Data Digitalização.</th>
-                            <th>Data inserção SEI</th>
-                            <th>Qnt. Imagens digitalizadas</th>
-                            <th>Anexo</th>
-                            <th>Quant. de páginas do anexo</th>
-                            <th>Observações</th>
+                            <th class="col-proc">Nº Processo</th>
+                            <th class="col-data">Data Digitalização.</th>
+                            <th class="col-data">Data inserção SEI</th>
+                            <th class="col-qnt">Qnt. Imagens digitalizadas</th>
+                            <th class="col-anexo">Anexo</th>
+                            <th class="col-qnt">Quant. de páginas do anexo</th>
+                            <th class="col-obs">Observações</th>
                         </tr>
                     </thead><tbody>`;
                 
@@ -130,10 +165,10 @@
                     const eventoSei = index === 0 ? `oninput="window.replicarDadosPrimeiraLinha('dataSei', this.value)"` : "";
 
                     html += `<tr>
-                        <td><b>${p.numeroProcessoFisico}</b></td>
+                        <td class="col-proc"><b>${p.numeroProcessoFisico}</b></td>
                         <td><input type="date" id="dataDig_${procId}" ${eventoDig} required></td>
                         <td><input type="date" id="dataSei_${procId}" ${eventoSei} required></td>
-                        <td><input type="number" id="qtdImg_${procId}" class="col-qnt-img" required min="1"></td>
+                        <td><input type="number" id="qtdImg_${procId}" required min="1"></td>
                         <td>
                             <select id="anexo_${procId}">
                                 <option value="Nenhum">Nenhum</option>
@@ -143,8 +178,8 @@
                                 <option value="Pen Drive">Pen Drive</option>
                             </select>
                         </td>
-                        <td><input type="number" id="pgAnexo_${procId}" class="col-pg-anexo" min="0"></td>
-                        <td><input type="text" id="obs_${procId}" class="col-obs" placeholder="Opcional..."></td>
+                        <td><input type="number" id="pgAnexo_${procId}" min="0"></td>
+                        <td><input type="text" id="obs_${procId}" placeholder="Opcional..."></td>
                     </tr>`;
                     index++;
                 });
@@ -165,7 +200,7 @@
                     qtdImagensDigitalizadas: document.getElementById(`qtdImg_${id}`).value,
                     tipoAnexo: document.getElementById(`anexo_${id}`).value,
                     qtdPaginasAnexo: document.getElementById(`pgAnexo_${id}`).value || "0",
-                    observacoes: document.getElementById(`obs_${id}`).value // Salva o novo campo
+                    observacoes: document.getElementById(`obs_${id}`).value
                 }));
                 
                 await Promise.all(promessas);
