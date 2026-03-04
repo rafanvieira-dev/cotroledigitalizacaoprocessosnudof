@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controlo de Processos - NUDOF</title>
+    <title>Controle de Processos - NUDOF</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -31,9 +31,6 @@
         </aside>
         <main id="content">
             <h2 class="page-title">Bem-vindo ao Sistema de Processos</h2>
-            <div class="form-container">
-                <p>Utilize o menu lateral para navegar. Este sistema é <strong>exclusivo</strong> para a gestão e digitalização de processos físicos do NUDOF.</p>
-            </div>
             <div id="mainDisplay"></div>
         </main>
     </div>
@@ -44,8 +41,8 @@
         import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
         onAuthStateChanged(auth, (user) => {
-            // 🚨 CORREÇÃO 1: Removi a restrição "@defensoria.rj.def.br" temporariamente
             if (user) {
+                // Bloqueio de segurança por domínio (Opcional: reative se necessário)
                 document.getElementById("loginSection").style.display = "none";
                 document.getElementById("appInterface").style.display = "flex";
                 carregarHistorico();
@@ -56,12 +53,9 @@
         });
 
         document.getElementById("btnGoogle").onclick = () => {
-            document.getElementById("erroMsg").innerText = "A iniciar o Google..."; 
-            
             signInWithPopup(auth, new GoogleAuthProvider()).catch((error) => {
-                // 🚨 CORREÇÃO 2: Mostra o erro exato que o Firebase está a devolver
-                console.error("ERRO DO FIREBASE:", error);
-                document.getElementById("erroMsg").innerText = "Erro Firebase: " + error.code;
+                console.error("Erro Auth:", error);
+                document.getElementById("erroMsg").innerText = "Falha na autenticação.";
             });
         };
 
@@ -72,18 +66,18 @@
             try {
                 const q = query(collection(db, "guias"), orderBy("dataRecebimento", "desc"));
                 const snap = await getDocs(q);
-                if (snap.empty) { display.innerHTML = "<p>Nenhuma guia cadastrada no sistema.</p>"; return; }
+                if (snap.empty) { display.innerHTML = "<p>Nenhuma guia cadastrada.</p>"; return; }
                 
-                let html = "<h3 style='margin-bottom:15px;'>Últimas Guias Criadas:</h3>";
+                let html = "<h3>Últimas Guias Criadas:</h3>";
                 snap.forEach(d => {
                     const g = d.data();
-                    html += `<div style="background: #fff; padding: 15px; margin-bottom: 10px; border-left: 4px solid #3498db; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display:flex; justify-content:space-between;">
-                        <div><strong>Guia: ${g.numero}</strong><br><small>Unidade: ${g.unidade}</small></div>
-                        <div style="font-weight:bold; color:#003366;">Status: ${g.status}</div>
+                    html += `<div class="guia-card-historico" style="background:#fff; padding:15px; margin:10px 0; border-left:4px solid #3498db; display:flex; justify-content:space-between; border-radius:4px; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+                        <div><strong>Guia: ${g.numero}</strong><br><small>${g.unidade}</small></div>
+                        <div style="font-weight:bold;">${g.status}</div>
                     </div>`;
                 });
                 display.innerHTML = html;
-            } catch (e) { display.innerHTML = "Erro ao carregar histórico."; }
+            } catch (e) { console.error(e); }
         }
     </script>
 </body>
