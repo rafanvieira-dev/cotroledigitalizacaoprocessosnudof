@@ -8,6 +8,11 @@
         .tabela-docs-arquivamento { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.82em; }
         .tabela-docs-arquivamento th, .tabela-docs-arquivamento td { padding: 8px; border: 1px solid var(--border); vertical-align: top; }
         input, select { width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid var(--border); border-radius: 4px; }
+        
+        /* Ajustes de largura solicitados */
+        .col-qnt-img { width: 80px; }
+        .col-pg-anexo { width: 50px; } /* Aproximadamente 2 caracteres */
+        .col-obs { min-width: 150px; }
     </style>
 </head>
 <body>
@@ -52,6 +57,7 @@
         let guiaAtualId = "";
         let processosDaGuia = [];
 
+        // Função para replicar dados da primeira linha para as demais
         window.replicarDadosPrimeiraLinha = (tipo, valor) => {
             processosDaGuia.forEach((id, index) => {
                 if (index > 0) {
@@ -71,16 +77,28 @@
                     const procsSnap = await getDocs(collection(db, "guias", d.id, "processos"));
                     if (procsSnap.size > 0) guias.push({ id: d.id, ...d.data() });
                 }
-                container.innerHTML = guias.length === 0 ? "<p>Nenhuma guia pronta.</p>" : ""; 
+                
+                container.innerHTML = guias.length === 0 ? "<p>Nenhuma guia pronta para digitalização.</p>" : ""; 
+                
                 guias.forEach(g => {
                     const div = document.createElement("div"); 
                     div.className = "guia-card";
+                    div.style.borderLeftColor = "var(--secondary)";
                     div.innerHTML = `
-                        <div class="guia-info"><h4>Guia: ${g.numero}</h4><p>${g.unidade}</p></div>
-                        <button onclick="window.abrirDigitalizacao('${g.id}', '${g.numero}')" style="background:var(--secondary); color:white; padding:10px; border-radius:4px; cursor:pointer;">🖨️ Digitalizar</button>`;
+                        <div class="guia-info">
+                            <h4>Guia: ${g.numero}</h4>
+                            <p><strong>Unidade:</strong> ${g.unidade}</p>
+                        </div>
+                        <button onclick="window.abrirDigitalizacao('${g.id}', '${g.numero}')" 
+                                style="background:var(--secondary); color:white; padding:10px 20px; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">
+                            🖨️ Iniciar Digitalização
+                        </button>`;
                     container.appendChild(div);
                 });
-            } catch (err) { console.error(err); }
+            } catch (err) { 
+                console.error(err);
+                container.innerHTML = `<p style="color:red;">Erro ao carregar guias.</p>`;
+            }
         }
 
         window.abrirDigitalizacao = async (id, num) => {
@@ -89,14 +107,45 @@
             document.getElementById("modalArquivar").style.display = "block";
             try {
                 const snap = await getDocs(collection(db, "guias", id, "processos"));
-                let html = `<table class="tabela-docs-arquivamento"><thead><tr style="background:var(--primary); color:white;"><th>Nº Processo</th><th>Data Digit.</th><th>Data SEI</th><th>Imagens</th><th>Anexo</th><th>Págs</th></tr></thead><tbody>`;
+                let html = `<table class="tabela-docs-arquivamento">
+                    <thead style="background:var(--primary); color:white;">
+                        <tr>
+                            <th>Nº Processo</th>
+                            <th>Data Digitalização.</th>
+                            <th>Data inserção SEI</th>
+                            <th>Qnt. Imagens digitalizadas</th>
+                            <th>Anexo</th>
+                            <th>Quant. de páginas do anexo</th>
+                            <th>Observações</th>
+                        </tr>
+                    </thead><tbody>`;
+                
                 let index = 0;
                 snap.forEach(docSnap => {
                     const procId = docSnap.id;
                     processosDaGuia.push(procId);
+                    const p = docSnap.data();
+                    
                     const eventoDig = index === 0 ? `oninput="window.replicarDadosPrimeiraLinha('dataDig', this.value)"` : "";
                     const eventoSei = index === 0 ? `oninput="window.replicarDadosPrimeiraLinha('dataSei', this.value)"` : "";
-                    html += `<tr><td><b>${docSnap.data().numeroProcessoFisico}</b></td><td><input type="date" id="dataDig_${procId}" ${eventoDig} required></td><td><input type="date" id="dataSei_${procId}" ${eventoSei} required></td><td><input type="number" id="qtdImg_${procId}" required min="1"></td><td><select id="anexo_${procId}"><option value="Nenhum">Nenhum</option><option value="CD">CD</option><option value="DVD">DVD</option><option value="Pen Drive">Pen Drive</option></select></td><td><input type="number" id="pgAnexo_${procId}" min="0"></td></tr>`;
+
+                    html += `<tr>
+                        <td><b>${p.numeroProcessoFisico}</b></td>
+                        <td><input type="date" id="dataDig_${procId}" ${eventoDig} required></td>
+                        <td><input type="date" id="dataSei_${procId}" ${eventoSei} required></td>
+                        <td><input type="number" id="qtdImg_${procId}" class="col-qnt-img" required min="1"></td>
+                        <td>
+                            <select id="anexo_${procId}">
+                                <option value="Nenhum">Nenhum</option>
+                                <option value="PAPEL">PAPEL</option>
+                                <option value="CD">CD</option>
+                                <option value="DVD">DVD</option>
+                                <option value="Pen Drive">Pen Drive</option>
+                            </select>
+                        </td>
+                        <td><input type="number" id="pgAnexo_${procId}" class="col-pg-anexo" min="0"></td>
+                        <td><input type="text" id="obs_${procId}" class="col-obs" placeholder="Opcional..."></td>
+                    </tr>`;
                     index++;
                 });
                 document.getElementById("areaDocumentosArquivar").innerHTML = html + "</tbody></table>";
@@ -105,18 +154,37 @@
 
         document.getElementById("formDadosArquivamento").onsubmit = async (e) => {
             e.preventDefault();
+            const btn = document.getElementById("btnConfirmarArq");
+            btn.disabled = true;
+            btn.innerText = "A guardar dados...";
+            
             try {
                 const promessas = processosDaGuia.map(id => updateDoc(doc(db, "guias", guiaAtualId, "processos", id), {
                     dataDigitalizacao: document.getElementById(`dataDig_${id}`).value,
                     dataInsercaoSEI: document.getElementById(`dataSei_${id}`).value,
                     qtdImagensDigitalizadas: document.getElementById(`qtdImg_${id}`).value,
                     tipoAnexo: document.getElementById(`anexo_${id}`).value,
-                    qtdPaginasAnexo: document.getElementById(`pgAnexo_${id}`).value || "0"
+                    qtdPaginasAnexo: document.getElementById(`pgAnexo_${id}`).value || "0",
+                    observacoes: document.getElementById(`obs_${id}`).value // Salva o novo campo
                 }));
+                
                 await Promise.all(promessas);
-                await updateDoc(doc(db, "guias", guiaAtualId), { status: "Digitalizada", operadorDigitalizacao: auth.currentUser.email });
-                document.getElementById("modalArquivar").style.display = "none"; carregar();
-            } catch (err) { alert("Erro ao salvar."); }
+                
+                await updateDoc(doc(db, "guias", guiaAtualId), { 
+                    status: "Digitalizada", 
+                    operadorDigitalizacao: auth.currentUser.email 
+                });
+                
+                alert("Digitalização concluída com sucesso!"); 
+                document.getElementById("modalArquivar").style.display = "none"; 
+                carregar();
+            } catch (err) { 
+                console.error(err);
+                alert("Erro ao salvar dados."); 
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "✅ CONCLUIR DIGITALIZAÇÃO";
+            }
         };
 
         document.getElementById("closeArquivar").onclick = () => document.getElementById("modalArquivar").style.display = "none";
