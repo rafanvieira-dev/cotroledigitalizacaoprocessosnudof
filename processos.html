@@ -7,6 +7,7 @@
     <style>
         .btn-guia-item { padding: 12px 20px; margin: 5px; border: none; border-radius: 5px; background: #003366; color: white; cursor: pointer; font-weight: bold; }
         #contadorProcs { font-weight: bold; padding: 10px; border-radius: 5px; text-align: center; margin-top: 10px; }
+        .btn-secundario { background: #7f8c8d; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -32,9 +33,9 @@
             </div>
 
             <div id="areaProcessos" style="display:none;">
-                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #ccc; padding-top: 20px; margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; padding-bottom: 15px; margin-bottom: 15px;">
                     <h3 id="tituloGuia" style="color: #003366;"></h3>
-                    <button type="button" onclick="window.fecharArea()" style="background: #7f8c8d; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">❌ Fechar</button>
+                    <button type="button" onclick="window.fecharArea()" class="btn-secundario">❌ Fechar</button>
                 </div>
 
                 <div class="form-container">
@@ -214,7 +215,7 @@
                         </div>
                         <button type="submit" class="btn-primary" id="btnSalvar">Gravar Processo</button>
                     </form>
-                    <p id="contadorProcs">0 / 6 processos cadastrados</p>
+                    <p id="contadorProcs"></p>
                 </div>
                 <div class="form-container">
                     <h3>Itens inseridos nesta guia:</h3>
@@ -257,8 +258,20 @@
             const snap = await getDocs(collection(db, "guias", id, "processos"));
             const total = snap.size;
             const p = document.getElementById("contadorProcs");
+            const btn = document.getElementById("btnSalvar");
+            
             p.innerText = `${total} / 6 processos cadastrados`;
-            p.style.color = total >= 6 ? "#e74c3c" : "#27ae60";
+            if (total >= 6) {
+                p.style.color = "#e74c3c";
+                btn.disabled = true;
+                btn.innerText = "LIMITE ATINGIDO";
+                btn.style.background = "#ccc";
+            } else {
+                p.style.color = "#27ae60";
+                btn.disabled = false;
+                btn.innerText = "Gravar Processo";
+                btn.style.background = "#003366";
+            }
             return total;
         }
 
@@ -304,7 +317,7 @@
                 document.getElementById("formProcesso").reset();
                 await atualizarContador(guiaAtivaId);
                 await window.atualizarLista(guiaAtivaId);
-            } catch (err) { alert("Erro ao salvar."); }
+            } catch (err) { console.error(err); alert("Erro ao salvar."); }
         };
 
         onAuthStateChanged(auth, (user) => { if (!user) window.location.href = "index.html"; else carregarGuias(); });
