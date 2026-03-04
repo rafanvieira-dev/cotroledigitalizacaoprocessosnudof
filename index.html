@@ -9,7 +9,7 @@
 <body>
     <div id="loginSection">
         <div class="form-container" style="margin: 50px auto; width: 400px; text-align: center;">
-            <div style="background-color: #003366; color: white; padding: 15px; margin: -25px -25px 30px -25px; border-radius: 8px 8px 0 0; font-weight: bold;">SISTEMA DE PROCESSOS NUDOF</div>
+            <div style="background-color: var(--primary); color: white; padding: 15px; margin: -25px -25px 30px -25px; border-radius: 8px 8px 0 0; font-weight: bold;">SISTEMA DE PROCESSOS NUDOF</div>
             <h2 style="margin-bottom: 20px;">Acesso Restrito</h2>
             <button id="btnGoogle" class="btn-primary" style="background-color: #4285F4; width: 100%;">🌐 Entrar com Google</button>
             <p id="erroMsg" style="color: #e74c3c; margin-top: 15px; font-weight: bold;"></p>
@@ -42,7 +42,6 @@
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Bloqueio de segurança por domínio (Opcional: reative se necessário)
                 document.getElementById("loginSection").style.display = "none";
                 document.getElementById("appInterface").style.display = "flex";
                 carregarHistorico();
@@ -54,8 +53,7 @@
 
         document.getElementById("btnGoogle").onclick = () => {
             signInWithPopup(auth, new GoogleAuthProvider()).catch((error) => {
-                console.error("Erro Auth:", error);
-                document.getElementById("erroMsg").innerText = "Falha na autenticação.";
+                document.getElementById("erroMsg").innerText = "Erro ao autenticar.";
             });
         };
 
@@ -68,16 +66,22 @@
                 const snap = await getDocs(q);
                 if (snap.empty) { display.innerHTML = "<p>Nenhuma guia cadastrada.</p>"; return; }
                 
-                let html = "<h3>Últimas Guias Criadas:</h3>";
+                let html = "<h3 style='margin-bottom:20px; color:var(--primary);'>Histórico de Guias</h3>";
                 snap.forEach(d => {
                     const g = d.data();
-                    html += `<div class="guia-card-historico" style="background:#fff; padding:15px; margin:10px 0; border-left:4px solid #3498db; display:flex; justify-content:space-between; border-radius:4px; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
-                        <div><strong>Guia: ${g.numero}</strong><br><small>${g.unidade}</small></div>
-                        <div style="font-weight:bold;">${g.status}</div>
-                    </div>`;
+                    const statusClass = g.status.toLowerCase();
+                    html += `
+                        <div class="guia-card">
+                            <div class="guia-info">
+                                <h4>Guia: ${g.numero}</h4>
+                                <p><strong>Unidade:</strong> ${g.unidade}</p>
+                                <p><small>Recebida em: ${g.dataRecebimento} às ${g.horaRecebimento}</small></p>
+                            </div>
+                            <div class="status-badge status-${statusClass}">${g.status}</div>
+                        </div>`;
                 });
                 display.innerHTML = html;
-            } catch (e) { console.error(e); }
+            } catch (e) { display.innerHTML = "Erro ao carregar histórico."; }
         }
     </script>
 </body>
