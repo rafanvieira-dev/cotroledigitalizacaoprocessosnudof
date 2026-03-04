@@ -38,10 +38,15 @@
     <script type="module">
         import { auth, db } from "./firebase.js";
         import { onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-        import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+        import { collection, getDocs, query, orderBy, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+        // 🚨 COLOQUE AQUI OS E-MAILS DE QUEM É ADMINISTRADOR
+        const EMAILS_ADMIN = ["seu_email@gmail.com", "admin@defensoria.rj.def.br"];
+        let isAdmin = false;
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
+                isAdmin = EMAILS_ADMIN.includes(user.email);
                 document.getElementById("loginSection").style.display = "none";
                 document.getElementById("appInterface").style.display = "flex";
                 carregarHistorico();
@@ -70,19 +75,62 @@
                 snap.forEach(d => {
                     const g = d.data();
                     const statusClass = g.status.toLowerCase();
+                    
+                    // Botões de Admin
+                    let painelAdmin = "";
+                    if (isAdmin) {
+                        painelAdmin = `
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border); display: flex; gap: 10px;">
+                            <button onclick="window.editarGuia('${d.id}', '${g.numero}', '${g.unidade}')" style="background:var(--accent); color:#333; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85em;">✏️ Editar Guia</button>
+                            <button onclick="window.excluirGuia('${d.id}', '${g.numero}')" style="background:#e74c3c; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85em;">🗑️ Excluir Guia</button>
+                        </div>`;
+                    }
+
                     html += `
-                        <div class="guia-card">
-                            <div class="guia-info">
-                                <h4>Guia: ${g.numero}</h4>
-                                <p><strong>Unidade:</strong> ${g.unidade}</p>
-                                <p><small>Recebida em: ${g.dataRecebimento} às ${g.horaRecebimento}</small></p>
+                        <div class="guia-card" style="flex-direction: column; align-items: stretch;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div class="guia-info">
+                                    <h4>Guia: ${g.numero}</h4>
+                                    <p><strong>Unidade:</strong> ${g.unidade}</p>
+                                    <p><small>Recebida em: ${g.dataRecebimento} às ${g.horaRecebimento}</small></p>
+                                </div>
+                                <div class="status-badge status-${statusClass}">${g.status}</div>
                             </div>
-                            <div class="status-badge status-${statusClass}">${g.status}</div>
+                            ${painelAdmin}
                         </div>`;
                 });
                 display.innerHTML = html;
             } catch (e) { display.innerHTML = "Erro ao carregar histórico."; }
         }
+
+        // FUNÇÕES EXCLUSIVAS DE ADMIN
+        window.editarGuia = async (id, numAtual, uniAtual) => {
+            const novoNum = prompt("Editar Número da Guia:", numAtual);
+            if (novoNum === null || novoNum.trim() === "") return;
+            const novaUni = prompt("Editar Unidade da Guia:", uniAtual);
+            if (novaUni === null || novaUni.trim() === "") return;
+
+            try {
+                await updateDoc(doc(db, "guias", id), { numero: novoNum.trim(), unidade: novaUni.trim() });
+                alert("Guia atualizada com sucesso!");
+                carregarHistorico();
+            } catch (e) { alert("Erro ao atualizar guia."); }
+        };
+
+        window.excluirGuia = async (id, num) => {
+            if (confirm(`🚨 PERIGO: Deseja EXCLUIR DEFINITIVAMENTE a Guia ${num} e TODOS os processos dentro dela?\nEsta ação não tem volta!`)) {
+                try {
+                    // 1. Apaga os processos de dentro da guia primeiro
+                    const procs = await getDocs(collection(db, "guias", id, "processos"));
+                    const promessas = procs.docs.map(p => deleteDoc(doc(db, "guias", id, "processos", p.id)));
+                    await Promise.all(promessas);
+                    // 2. Apaga a guia
+                    await deleteDoc(doc(db, "guias", id));
+                    alert("Guia excluída do sistema!");
+                    carregarHistorico();
+                } catch (e) { alert("Erro ao excluir guia."); }
+            }
+        };
     </script>
 </body>
 </html>
