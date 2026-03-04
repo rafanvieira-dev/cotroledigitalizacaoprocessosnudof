@@ -93,7 +93,7 @@
 
     <script type="module">
         import { db, auth } from "./firebase.js";
-        import { collection, getDocs, addDoc, updateDoc, doc, deleteDoc, getDoc, query, where, orderBy, serverTimestamp, collectionGroup } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+        import { collection, getDocs, addDoc, updateDoc, doc, deleteDoc, getDoc, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
         const EMAILS_ADMIN = ["rafael.nascimento-vieira@defensoria.rj.def.br"];
@@ -118,10 +118,12 @@
             const datalist = document.getElementById("listaTiposSei");
             const recentes = JSON.parse(localStorage.getItem("recentesSei") || "[]");
             datalist.innerHTML = "";
+            
             if (recentes.length > 0) {
                 recentes.forEach(tipo => { datalist.innerHTML += `<option value="${tipo}">`; });
                 datalist.innerHTML += `<option value="-------------------------------------------" disabled>`;
             }
+            
             TIPOS_SEI_BASE.forEach(tipo => {
                 if (!recentes.includes(tipo)) { datalist.innerHTML += `<option value="${tipo}">`; }
             });
@@ -130,10 +132,12 @@
         function salvarRecente(tipo) {
             const tipoLimpo = tipo.toUpperCase();
             if (!TIPOS_SEI_BASE.includes(tipoLimpo)) return;
+            
             let recentes = JSON.parse(localStorage.getItem("recentesSei") || "[]");
             recentes = recentes.filter(r => r !== tipoLimpo);
             recentes.unshift(tipoLimpo); 
             if (recentes.length > 5) recentes.pop(); 
+            
             localStorage.setItem("recentesSei", JSON.stringify(recentes));
             atualizarDatalistSei();
         }
@@ -265,24 +269,32 @@
             if (dataAb.length < 10 || dataRec.length < 10) return alert("Preencha as datas completamente.");
             
             // ==========================================
-            // NOVA REGRA: VALIDAÇÃO DE NÚMERO DUPLICADO
+            // NOVA REGRA: VERIFICAÇÃO DIRETA SEM EXIGIR ÍNDICE!
             // ==========================================
             try {
                 const btn = document.getElementById("btnSalvar");
                 btn.disabled = true;
                 btn.innerText = "A verificar duplicatas...";
 
-                // Procura em TODOS os processos cadastrados no sistema
-                const qDuplicata = query(collectionGroup(db, "processos"), where("numeroProcessoFisico", "==", numeroDigitado));
-                const snapDuplicata = await getDocs(qDuplicata);
-                
+                // Busca todas as guias do sistema
+                const guiasSnap = await getDocs(collection(db, "guias"));
                 let existeDuplicata = false;
-                snapDuplicata.forEach(docSnap => {
-                    // Ignora se o documento encontrado for exatamente o mesmo que estamos editando agora
-                    if (processoEditandoId !== docSnap.id) {
-                        existeDuplicata = true;
-                    }
-                });
+
+                // Percorre guia por guia pesquisando o número (é rápido e não dá erro de índice)
+                for (const guiaDoc of guiasSnap.docs) {
+                    const qDuplicata = query(collection(db, "guias", guiaDoc.id, "processos"), where("numeroProcessoFisico", "==", numeroDigitado));
+                    const snapDuplicata = await getDocs(qDuplicata);
+                    
+                    snapDuplicata.forEach(docSnap => {
+                        // Se encontrar o número num processo que NÃO seja o que estamos a editar
+                        if (processoEditandoId !== docSnap.id) {
+                            existeDuplicata = true;
+                        }
+                    });
+
+                    // Se já encontrou, não precisa de continuar a procurar nas outras guias
+                    if (existeDuplicata) break;
+                }
 
                 if (existeDuplicata) {
                     btn.disabled = false;
@@ -291,22 +303,9 @@
                 }
             } catch (error) {
                 console.error("Erro ao verificar duplicidade:", error);
-                const btn = document.getElementById("btnSalvar");
-                btn.disabled = false;
-                btn.innerText = processoEditandoId ? "🔄 ATUALIZAR PROCESSO" : "Gravar Processo";
-                
-                // Extrai o link mágico do erro do Firebase para criar o índice
-                const linkMatch = error.message.match(/(https:\/\/console\.firebase\.google\.com[^\s]+)/);
-                
-                if (linkMatch) {
-                    alert("🚨 CONFIGURAÇÃO NECESSÁRIA NO FIREBASE!\n\nPara o sistema conseguir pesquisar números repetidos em TODAS as guias ao mesmo tempo, o Firebase exige a criação de um 'Índice'.\n\nClique em OK e vamos abrir uma página do Firebase para si. Lá, inicie a sessão se necessário, clique em 'Create Index' (Criar Índice), aguarde 3 a 5 minutos para ele ficar pronto, e só depois tente gravar de novo!");
-                    window.open(linkMatch[1], "_blank");
-                } else {
-                    alert("🚨 Erro no banco de dados ao verificar duplicatas. Verifique a sua conexão à internet.");
-                }
-                
-                // O RETORNO QUE IMPEDE A GRAVAÇÃO EM CASO DE ERRO!
-                return; 
+                document.getElementById("btnSalvar").disabled = false;
+                document.getElementById("btnSalvar").innerText = processoEditandoId ? "🔄 ATUALIZAR PROCESSO" : "Gravar Processo";
+                return alert("🚨 Erro na comunicação com o banco de dados. Tente novamente.");
             }
             // ==========================================
 
