@@ -52,6 +52,16 @@
         let guiaAtualId = "";
         let processosDaGuia = [];
 
+        // REPLICAÇÃO: Função global para replicar os dados da primeira linha
+        window.replicarDadosPrimeiraLinha = (tipo, valor) => {
+            processosDaGuia.forEach((id, index) => {
+                if (index > 0) { // Não altera a própria primeira linha
+                    const input = document.getElementById(`${tipo}_${id}`);
+                    if (input) input.value = valor;
+                }
+            });
+        };
+
         async function carregar() {
             const container = document.getElementById("listaParaArquivar");
             try {
@@ -96,17 +106,26 @@
                     <thead style="background:var(--primary); color:white;">
                         <tr><th>Nº Processo</th><th>Data Digit.</th><th>Data Inserção SEI</th><th>Qtd. Imagens</th><th>Anexo</th><th>Págs Anexo</th></tr>
                     </thead><tbody>`;
+                
+                let index = 0;
                 snap.forEach(docSnap => {
-                    processosDaGuia.push(docSnap.id);
+                    const procId = docSnap.id;
+                    processosDaGuia.push(procId);
                     const p = docSnap.data();
+                    
+                    // REPLICAÇÃO: Adiciona evento oninput apenas nos campos da primeira linha (index 0)
+                    const eventoDig = index === 0 ? `oninput="window.replicarDadosPrimeiraLinha('dataDig', this.value)"` : "";
+                    const eventoSei = index === 0 ? `oninput="window.replicarDadosPrimeiraLinha('dataSei', this.value)"` : "";
+
                     html += `<tr>
                         <td><b>${p.numeroProcessoFisico}</b></td>
-                        <td><input type="date" id="dataDig_${docSnap.id}" required></td>
-                        <td><input type="date" id="dataSei_${docSnap.id}" required></td>
-                        <td><input type="number" id="qtdImg_${docSnap.id}" required min="1"></td>
-                        <td><select id="anexo_${docSnap.id}"><option value="Nenhum">Nenhum</option><option value="CD">CD</option><option value="DVD">DVD</option><option value="Pen Drive">Pen Drive</option></select></td>
-                        <td><input type="number" id="pgAnexo_${docSnap.id}" min="0"></td>
+                        <td><input type="date" id="dataDig_${procId}" ${eventoDig} required></td>
+                        <td><input type="date" id="dataSei_${procId}" ${eventoSei} required></td>
+                        <td><input type="number" id="qtdImg_${procId}" required min="1"></td>
+                        <td><select id="anexo_${procId}"><option value="Nenhum">Nenhum</option><option value="CD">CD</option><option value="DVD">DVD</option><option value="Pen Drive">Pen Drive</option></select></td>
+                        <td><input type="number" id="pgAnexo_${procId}" min="0"></td>
                     </tr>`;
+                    index++;
                 });
                 document.getElementById("areaDocumentosArquivar").innerHTML = html + "</tbody></table>";
             } catch (e) { console.error(e); }
