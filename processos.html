@@ -29,7 +29,7 @@
 
             <div id="areaProcessos" style="display:none;">
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 15px;">
-                    <h3 id="tituloGuia" style="color: var(--primary);"></h3>
+                    <h3 id="tituloGuia"></h3>
                     <button type="button" onclick="window.fecharArea()" style="background: #95a5a6; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">❌ Fechar</button>
                 </div>
 
@@ -45,8 +45,9 @@
                         <label>Interessado:</label><input type="text" id="interessado" required>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                             <div><label>Qtd. Folhas:</label><input type="number" id="qtdFolhas" required></div>
-                            <div>
+                            <div class="search-select-container">
                                 <label>Tipo de Processo no SEI:</label>
+                                <input type="text" id="searchTipoProcesso" placeholder="Pesquisar..." onkeyup="window.filterTypes()">
                                 <select id="tipoProcessoSei" required>
                                     <option value="" disabled selected>Selecione...</option>
                                     <option value="Administração Geral: Ação Rescisória">Administração Geral: Ação Rescisória</option>
@@ -220,6 +221,19 @@
         </main>
     </div>
 
+    <script>
+        window.filterTypes = function() {
+            const input = document.getElementById('searchTipoProcesso');
+            const filter = input.value.toUpperCase();
+            const select = document.getElementById('tipoProcessoSei');
+            const options = select.getElementsByTagName('option');
+            for (let i = 1; i < options.length; i++) {
+                const txtValue = options[i].textContent || options[i].innerText;
+                options[i].style.display = txtValue.toUpperCase().indexOf(filter) > -1 ? "" : "none";
+            }
+        }
+    </script>
+
     <script type="module">
         import { db, auth } from "./firebase.js";
         import { collection, getDocs, addDoc, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
@@ -235,7 +249,6 @@
             snap.forEach(d => {
                 const btn = document.createElement("button");
                 btn.className = "btn-guia-item";
-                btn.style.backgroundColor = "var(--primary)";
                 btn.innerText = `Guia: ${d.data().numero}`;
                 btn.onclick = () => window.abrirGuia(d.id, d.data().numero);
                 lista.appendChild(btn);
@@ -255,7 +268,6 @@
             const total = snap.size;
             const p = document.getElementById("contadorProcs");
             const btn = document.getElementById("btnSalvar");
-            
             p.innerText = `${total} / 6 processos cadastrados`;
             if (total >= 6) {
                 p.style.color = "#e74c3c";
@@ -272,6 +284,8 @@
             document.getElementById("areaProcessos").style.display = "none";
             guiaAtivaId = "";
             document.getElementById("formProcesso").reset();
+            document.getElementById("searchTipoProcesso").value = "";
+            window.filterTypes();
         };
 
         window.atualizarLista = async (id) => {
@@ -305,6 +319,8 @@
                 });
                 alert("Processo guardado!");
                 document.getElementById("formProcesso").reset();
+                document.getElementById("searchTipoProcesso").value = "";
+                window.filterTypes();
                 await atualizarContador(guiaAtivaId);
                 await window.atualizarLista(guiaAtivaId);
             } catch (err) { alert("Erro ao salvar."); }
