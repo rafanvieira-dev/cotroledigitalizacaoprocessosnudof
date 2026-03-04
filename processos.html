@@ -4,11 +4,6 @@
     <meta charset="UTF-8">
     <title>Inserir Processos - NUDOF</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        .btn-guia-item { padding: 12px 20px; margin: 5px; border: none; border-radius: 5px; background: #003366; color: white; cursor: pointer; font-weight: bold; }
-        #contadorProcs { font-weight: bold; padding: 10px; border-radius: 5px; text-align: center; margin-top: 10px; }
-        .btn-secundario { background: #7f8c8d; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
-    </style>
 </head>
 <body>
     <div id="appInterface">
@@ -33,9 +28,9 @@
             </div>
 
             <div id="areaProcessos" style="display:none;">
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; padding-bottom: 15px; margin-bottom: 15px;">
-                    <h3 id="tituloGuia" style="color: #003366;"></h3>
-                    <button type="button" onclick="window.fecharArea()" class="btn-secundario">❌ Fechar</button>
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 15px;">
+                    <h3 id="tituloGuia" style="color: var(--primary);"></h3>
+                    <button type="button" onclick="window.fecharArea()" style="background: #95a5a6; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">❌ Fechar</button>
                 </div>
 
                 <div class="form-container">
@@ -215,7 +210,7 @@
                         </div>
                         <button type="submit" class="btn-primary" id="btnSalvar">Gravar Processo</button>
                     </form>
-                    <p id="contadorProcs"></p>
+                    <p id="contadorProcs" style="font-weight: bold; text-align: center; margin-top: 15px;"></p>
                 </div>
                 <div class="form-container">
                     <h3>Itens inseridos nesta guia:</h3>
@@ -240,6 +235,7 @@
             snap.forEach(d => {
                 const btn = document.createElement("button");
                 btn.className = "btn-guia-item";
+                btn.style.backgroundColor = "var(--primary)";
                 btn.innerText = `Guia: ${d.data().numero}`;
                 btn.onclick = () => window.abrirGuia(d.id, d.data().numero);
                 lista.appendChild(btn);
@@ -264,15 +260,12 @@
             if (total >= 6) {
                 p.style.color = "#e74c3c";
                 btn.disabled = true;
-                btn.innerText = "LIMITE ATINGIDO";
-                btn.style.background = "#ccc";
+                btn.innerText = "LIMITE DE 6 ATINGIDO";
             } else {
-                p.style.color = "#27ae60";
+                p.style.color = "var(--secondary)";
                 btn.disabled = false;
                 btn.innerText = "Gravar Processo";
-                btn.style.background = "#003366";
             }
-            return total;
         }
 
         window.fecharArea = () => {
@@ -289,7 +282,7 @@
             let i = 1;
             snap.forEach(dSnap => {
                 const p = dSnap.data();
-                container.innerHTML += `<li style="padding:15px; background:#f8f9fa; border-left:4px solid #003366; margin-bottom:10px; border-radius:4px;">
+                container.innerHTML += `<li style="padding:15px; background:#f8f9fa; border-left:4px solid var(--primary); margin-bottom:10px; border-radius:4px;">
                     <strong>${i++}º. Proc: ${p.numeroProcessoFisico}</strong><br>
                     <small>Interessado: ${p.interessado} | Assunto: ${p.assunto} | Folhas: ${p.qtdFolhas}</small>
                 </li>`;
@@ -298,9 +291,6 @@
 
         document.getElementById("formProcesso").onsubmit = async (e) => {
             e.preventDefault();
-            const total = await atualizarContador(guiaAtivaId);
-            if (total >= 6) return alert("Limite de 6 processos atingido para esta guia!");
-
             try {
                 await addDoc(collection(db, "guias", guiaAtivaId, "processos"), {
                     numeroProcessoFisico: document.getElementById("numeroProcessoFisico").value,
@@ -317,7 +307,7 @@
                 document.getElementById("formProcesso").reset();
                 await atualizarContador(guiaAtivaId);
                 await window.atualizarLista(guiaAtivaId);
-            } catch (err) { console.error(err); alert("Erro ao salvar."); }
+            } catch (err) { alert("Erro ao salvar."); }
         };
 
         onAuthStateChanged(auth, (user) => { if (!user) window.location.href = "index.html"; else carregarGuias(); });
