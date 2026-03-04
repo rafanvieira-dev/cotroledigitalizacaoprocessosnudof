@@ -5,18 +5,59 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Controle de Processos - NUDOF</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Estilos padronizados do sistema de documentos */
+        .aba-header-btn {
+            width: 100%; padding: 12px; border: none; border-radius: 5px;
+            text-align: left; font-weight: bold; margin: 10px 0 5px 0;
+            cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+            transition: background 0.2s;
+        }
+        .aba-aberta { background: #003366; color: white; }
+        .aba-arquivada { background: #7f8c8d; color: white; }
+        
+        .btn-ano { background: #1c3e60; color: white; margin-left: 15px; width: calc(100% - 15px); font-size: 0.95em; }
+        .btn-ano:hover { background: #15304a; }
+        .btn-mes { background: #2c3e50; color: white; margin-left: 30px; width: calc(100% - 30px); font-size: 0.9em; padding: 10px; }
+        .btn-mes:hover { background: #1a252f; }
+        .btn-dia { background: #95a5a6; color: white; margin-left: 45px; width: calc(100% - 45px); font-size: 0.85em; padding: 8px 12px; }
+        .btn-dia:hover { background: #7f8c8d; }
+
+        .contador-index {
+            background: rgba(255,255,255,0.2); color: white; padding: 2px 10px;
+            border-radius: 12px; font-size: 0.85em; font-weight: normal; margin-left: 10px;
+        }
+
+        .grupo-conteudo, .grupo-ano, .grupo-mes, .grupo-dia { display: none; margin-bottom: 15px; }
+
+        .card-historico {
+            background: white; border-radius: 8px; padding: 15px; margin-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 4px solid #3498db;
+            margin-left: 60px; width: calc(100% - 60px);
+        }
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75em; font-weight: bold; }
+        .badge-aberta { background: #e8f4fd; color: #003366; }
+        .badge-arquivada { background: #dcfce7; color: #166534; }
+        .badge-digitalizada { background: #fdf2e9; color: #d35400; }
+        
+        .login-box { background: white; padding: 40px; border-radius: 8px; margin: 50px auto; width: 400px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
+    </style>
 </head>
 <body>
     <div id="loginSection" style="display: none;">
-        <div class="form-container" style="margin: 50px auto; width: 400px; text-align: center;">
-            <div style="background-color: var(--primary); color: white; padding: 15px; margin: -25px -25px 30px -25px; border-radius: 8px 8px 0 0; font-weight: bold;">SISTEMA DE PROCESSOS NUDOF</div>
+        <div class="login-box">
+            <div style="background-color: #003366; color: white; padding: 15px; margin: -40px -40px 30px -40px; border-radius: 8px 8px 0 0; font-weight: bold;">
+                SISTEMA DE PROCESSOS NUDOF
+            </div>
             <h2 style="margin-bottom: 20px;">Acesso Restrito</h2>
-            <button id="btnGoogle" class="btn-primary" style="background-color: #4285F4; width: 100%;">🌐 Entrar com Google</button>
+            <p style="margin-bottom: 20px; color: #666;">Utilize o seu e-mail institucional da Defensoria Pública para entrar.</p>
+            <button id="btnGoogle" class="btn-primary" style="background-color: #4285F4; width: 100%; font-size: 1.1em;">🌐 Entrar com Google</button>
             <p id="erroMsg" style="color: #e74c3c; margin-top: 15px; font-weight: bold;"></p>
         </div>
     </div>
 
-    <div id="loading" class="loading-overlay" style="display: flex; height: 100vh; justify-content: center; align-items: center; font-size: 1.5em; font-weight: bold; color: var(--primary);">Verificando acesso... Aguarde.</div>
+    <div id="loading" class="loading-overlay" style="display: flex; height: 100vh; justify-content: center; align-items: center; font-size: 1.5em; font-weight: bold; color: white; background: #003366; position: fixed; width: 100%; z-index: 9999;">Verificando acesso... Aguarde.</div>
     
     <div id="appInterface" style="display: none;">
         <aside id="sidebar">
@@ -32,14 +73,14 @@
             </nav>
         </aside>
         <main id="content">
-            <h2 class="page-title">Bem-vindo ao Sistema de Processos</h2>
+            <h2 class="page-title">Painel de Monitoramento</h2>
             
-            <div style="margin-bottom: 25px; background: var(--white); padding: 20px; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between;">
+            <div style="margin-bottom: 25px; background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between;">
                 <div>
-                    <h3 style="color: var(--primary); margin-bottom: 5px;">Acesso Rápido</h3>
-                    <p style="color: #666; font-size: 0.9em; margin: 0;">Acesse outros sistemas web da unidade.</p>
+                    <h3 style="color: #003366; margin-bottom: 5px;">Acesso Rápido</h3>
+                    <p style="color: #666; font-size: 0.9em; margin: 0;">Acesse o sistema de Digitalização de Documentos.</p>
                 </div>
-                <a href="https://rafanvieira-dev.github.io/controle-digitalizacaonudof/index.html" target="_self" class="btn-primary" style="text-decoration: none; width: auto; padding: 12px 20px; background-color: var(--secondary); display: inline-block;">
+                <a href="https://rafanvieira-dev.github.io/controle-digitalizacaonudof/index.html" target="_self" class="btn-primary" style="text-decoration: none; width: auto; padding: 12px 20px; background-color: #3498db; display: inline-block;">
                     🔗 Digitalização de Documentos
                 </a>
             </div>
@@ -50,28 +91,26 @@
     <script type="module">
         import { auth, db } from "./firebase.js";
         import { onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-        import { collection, getDocs, query, orderBy, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+        import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-        // 🚨 COLOQUE AQUI OS E-MAILS DE QUEM É ADMINISTRADOR
         const EMAILS_ADMIN = ["rafael.nascimento-vieira@defensoria.rj.def.br"];
-        let isAdmin = false;
+        const nomeMeses = { "01": "Janeiro", "02": "Fevereiro", "03": "Março", "04": "Abril", "05": "Maio", "06": "Junho", "07": "Julho", "08": "Agosto", "09": "Setembro", "10": "Outubro", "11": "Novembro", "12": "Dezembro" };
 
         onAuthStateChanged(auth, (user) => {
             document.getElementById("loading").style.display = "none";
-            
-            if (user) {
-                isAdmin = EMAILS_ADMIN.includes(user.email);
+            if (user && user.email.endsWith("@defensoria.rj.def.br")) {
                 document.getElementById("loginSection").style.display = "none";
                 document.getElementById("appInterface").style.display = "flex";
                 carregarHistorico();
             } else {
+                if (user) signOut(auth);
                 document.getElementById("loginSection").style.display = "block";
                 document.getElementById("appInterface").style.display = "none";
             }
         });
 
         document.getElementById("btnGoogle").onclick = () => {
-            signInWithPopup(auth, new GoogleAuthProvider()).catch((error) => {
+            signInWithPopup(auth, new GoogleAuthProvider()).catch(() => {
                 document.getElementById("erroMsg").innerText = "Erro ao autenticar.";
             });
         };
@@ -81,91 +120,99 @@
         async function carregarHistorico() {
             const display = document.getElementById("mainDisplay");
             try {
-                const q = query(collection(db, "guias"), orderBy("dataRecebimento", "desc"));
+                const q = query(collection(db, "guias"), orderBy("dataRecebimento", "asc"));
                 const snap = await getDocs(q);
                 if (snap.empty) { display.innerHTML = "<p>Nenhuma guia cadastrada.</p>"; return; }
                 
-                let html = "<h3 style='margin-bottom:20px; color:var(--primary);'>Histórico de Guias</h3>";
+                const grupos = { "Ativas": {}, "Arquivadas": {} };
+                const contagem = { "Ativas": 0, "Arquivadas": 0 };
+
                 snap.forEach(d => {
                     const g = d.data();
-                    const statusClass = g.status.toLowerCase();
-                    
-                    // Botões de Admin
-                    let painelAdmin = "";
-                    if (isAdmin) {
-                        let btnDesarquivar = "";
-                        // O botão de desarquivar só aparece se o status for "Arquivada"
-                        if (statusClass === "arquivada") {
-                            btnDesarquivar = `<button onclick="window.desarquivarGuia('${d.id}', '${g.numero}')" style="background:#f39c12; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85em;">↩️ Desarquivar</button>`;
-                        }
+                    const statusMacro = g.status === "Arquivada" ? "Arquivadas" : "Ativas";
+                    const data = g.dataRecebimento || "Sem Data";
+                    let [ano, mes, dia] = data.includes('-') ? data.split('-') : ["Sem Ano", "Sem Mês", "Sem Dia"];
 
-                        painelAdmin = `
-                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border); display: flex; gap: 10px;">
-                            <button onclick="window.editarGuia('${d.id}', '${g.numero}', '${g.unidade}')" style="background:var(--accent); color:#333; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85em;">✏️ Editar Guia</button>
-                            ${btnDesarquivar}
-                            <button onclick="window.excluirGuia('${d.id}', '${g.numero}')" style="background:#e74c3c; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.85em;">🗑️ Excluir Guia</button>
-                        </div>`;
-                    }
+                    if (!grupos[statusMacro][ano]) grupos[statusMacro][ano] = { total: 0, meses: {} };
+                    if (!grupos[statusMacro][ano].meses[mes]) grupos[statusMacro][ano].meses[mes] = { total: 0, dias: {} };
+                    if (!grupos[statusMacro][ano].meses[mes].dias[dia]) grupos[statusMacro][ano].meses[mes].dias[dia] = [];
 
-                    html += `
-                        <div class="guia-card" style="flex-direction: column; align-items: stretch;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div class="guia-info">
-                                    <h4>Guia: ${g.numero}</h4>
-                                    <p><strong>Unidade:</strong> ${g.unidade}</p>
-                                    <p><small>Recebida em: ${g.dataRecebimento} às ${g.horaRecebimento}</small></p>
-                                </div>
-                                <div class="status-badge status-${statusClass}">${g.status}</div>
-                            </div>
-                            ${painelAdmin}
-                        </div>`;
+                    grupos[statusMacro][ano].meses[mes].dias[dia].push({ id: d.id, ...g });
+                    grupos[statusMacro][ano].total++;
+                    grupos[statusMacro][ano].meses[mes].total++;
+                    contagem[statusMacro]++;
                 });
-                display.innerHTML = html;
+
+                display.innerHTML = "";
+                ["Ativas", "Arquivadas"].forEach(statusMacro => {
+                    if (contagem[statusMacro] === 0) return;
+                    const btnStatus = document.createElement("button");
+                    btnStatus.className = `aba-header-btn ${statusMacro === 'Ativas' ? 'aba-aberta' : 'aba-arquivada'}`;
+                    btnStatus.innerHTML = `<div><span>📂 Guias ${statusMacro}</span> <span class="contador-index">${contagem[statusMacro]} guias</span></div><span>➕</span>`;
+                    
+                    const containerStatus = document.createElement("div");
+                    containerStatus.className = "grupo-conteudo";
+                    btnStatus.onclick = () => {
+                        const aberto = containerStatus.style.display === "block";
+                        containerStatus.style.display = aberto ? "none" : "block";
+                        btnStatus.querySelector('span:last-child').innerText = aberto ? "➕" : "➖";
+                    };
+                    display.appendChild(btnStatus); display.appendChild(containerStatus);
+
+                    Object.keys(grupos[statusMacro]).sort().forEach(anoStr => {
+                        const anoObj = grupos[statusMacro][anoStr];
+                        const btnAno = document.createElement("button");
+                        btnAno.className = "aba-header-btn btn-ano";
+                        btnAno.innerHTML = `<div><span>📁 Ano: ${anoStr}</span> <span class="contador-index">${anoObj.total} guias</span></div><span>➕</span>`;
+                        const divAno = document.createElement("div"); divAno.className = "grupo-ano";
+                        btnAno.onclick = () => {
+                            const aberto = divAno.style.display === "block";
+                            divAno.style.display = aberto ? "none" : "block";
+                            btnAno.querySelector('span:last-child').innerText = aberto ? "➕" : "➖";
+                        };
+                        containerStatus.appendChild(btnAno); containerStatus.appendChild(divAno);
+
+                        Object.keys(anoObj.meses).sort().forEach(mesStr => {
+                            const mesObj = anoObj.meses[mesStr];
+                            const btnMes = document.createElement("button");
+                            btnMes.className = "aba-header-btn btn-mes";
+                            btnMes.innerHTML = `<div><span>📂 ${nomeMeses[mesStr] || mesStr}</span> <span class="contador-index">${mesObj.total} guias</span></div><span>➕</span>`;
+                            const divMes = document.createElement("div"); divMes.className = "grupo-mes";
+                            btnMes.onclick = () => {
+                                const aberto = divMes.style.display === "block";
+                                divMes.style.display = aberto ? "none" : "block";
+                                btnMes.querySelector('span:last-child').innerText = aberto ? "➕" : "➖";
+                            };
+                            divAno.appendChild(btnMes); divAno.appendChild(divMes);
+
+                            Object.keys(mesObj.dias).sort().forEach(diaStr => {
+                                const guiasDoDia = mesObj.dias[diaStr];
+                                const btnDia = document.createElement("button");
+                                btnDia.className = "aba-header-btn btn-dia";
+                                btnDia.innerHTML = `<div><span>📅 ${diaStr}/${mesStr}/${anoStr}</span> <span class="contador-index">${guiasDoDia.length} guias</span></div><span>➕</span>`;
+                                const divDia = document.createElement("div"); divDia.className = "grupo-dia";
+                                btnDia.onclick = () => {
+                                    const aberto = divDia.style.display === "block";
+                                    divDia.style.display = aberto ? "none" : "block";
+                                    btnDia.querySelector('span:last-child').innerText = aberto ? "➕" : "➖";
+                                };
+                                divMes.appendChild(btnDia); divMes.appendChild(divDia);
+
+                                guiasDoDia.forEach(g => {
+                                    const card = document.createElement("div");
+                                    card.className = "card-historico";
+                                    card.style.borderLeft = `4px solid ${g.status === "Arquivada" ? "#27ae60" : (g.status === "Digitalizada" ? "#f39c12" : "#3498db")}`;
+                                    card.innerHTML = `
+                                        <div><strong>Guia: ${g.numero}</strong><br><small>${g.unidade}</small></div>
+                                        <div style="text-align:right"><span class="status-badge badge-${g.status.toLowerCase()}">${g.status}</span></div>`;
+                                    divDia.appendChild(card);
+                                });
+                            });
+                        });
+                    });
+                });
             } catch (e) { display.innerHTML = "Erro ao carregar histórico."; }
         }
-
-        // FUNÇÕES EXCLUSIVAS DE ADMIN
-        window.editarGuia = async (id, numAtual, uniAtual) => {
-            const novoNum = prompt("Editar Número da Guia:", numAtual);
-            if (novoNum === null || novoNum.trim() === "") return;
-            const novaUni = prompt("Editar Unidade da Guia:", uniAtual);
-            if (novaUni === null || novaUni.trim() === "") return;
-
-            try {
-                await updateDoc(doc(db, "guias", id), { numero: novoNum.trim(), unidade: novaUni.trim() });
-                alert("Guia atualizada com sucesso!");
-                carregarHistorico();
-            } catch (e) { alert("Erro ao atualizar guia."); }
-        };
-
-        // Nova função de Desarquivar na tela Inicial
-        window.desarquivarGuia = async (id, num) => {
-            if(confirm(`Deseja DESARQUIVAR a Guia ${num}?\nEla sairá do Acervo e voltará para o status "Aberta", permitindo adicionar ou remover processos.`)) {
-                try {
-                    await updateDoc(doc(db, "guias", id), {
-                        status: "Aberta",
-                        locCaixaGuia: "",
-                        locCaixaProc: "",
-                        dataArquivamentoSistema: ""
-                    });
-                    alert("Guia Desarquivada! Ela voltou para o status 'Aberta'.");
-                    carregarHistorico();
-                } catch(e) { alert("Erro ao desarquivar."); }
-            }
-        };
-
-        window.excluirGuia = async (id, num) => {
-            if (confirm(`🚨 PERIGO: Deseja EXCLUIR DEFINITIVAMENTE a Guia ${num} e TODOS os processos dentro dela?\nEsta ação não tem volta!`)) {
-                try {
-                    const procs = await getDocs(collection(db, "guias", id, "processos"));
-                    const promessas = procs.docs.map(p => deleteDoc(doc(db, "guias", id, "processos", p.id)));
-                    await Promise.all(promessas);
-                    await deleteDoc(doc(db, "guias", id));
-                    alert("Guia excluída do sistema!");
-                    carregarHistorico();
-                } catch (e) { alert("Erro ao excluir guia."); }
-            }
-        };
     </script>
 </body>
 </html>
