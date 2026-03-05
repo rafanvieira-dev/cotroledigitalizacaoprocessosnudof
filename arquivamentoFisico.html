@@ -9,11 +9,8 @@
         .guia-card-arquivar { background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 6px solid #27ae60; }
         .input-group label { display: block; font-weight: bold; font-size: 13px; margin-bottom: 5px; color: #34495e; }
         .input-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
-        .linha-data { display: flex; align-items: center; gap: 15px; background: #fff; padding: 10px 15px; border-radius: 6px; border: 1px solid #ccc; margin-bottom: 15px; }
+        .linha-data { display: flex; align-items: center; gap: 15px; background: #fff; padding: 10px 15px; border-radius: 6px; border: 1px solid #ccc; }
         .linha-data label { margin-bottom: 0; font-size: 14px; white-space: nowrap; }
-        .tabela-arquivamento { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
-        .tabela-arquivamento th { background: #f2f2f2; padding: 10px; border: 1px solid #ddd; text-align: left; }
-        .tabela-arquivamento td { padding: 10px; border: 1px solid #ddd; }
     </style>
 </head>
 <body>
@@ -38,25 +35,28 @@
     </div>
 
     <div id="modalArquivar" class="modal">
-        <div class="modal-content" style="width: 95%; max-width: 800px; margin: 5% auto;">
+        <div class="modal-content" style="width: 95%; max-width: 650px; margin: 5% auto;">
             <span class="close-btn" id="closeArquivar" style="float: right; cursor: pointer; font-size: 1.5em;">&times;</span>
             <h3 id="tituloModalArquivar" style="margin-bottom: 15px; color: #003366;"></h3>
             
             <form id="formDadosArquivamento">
-                <div style="background: #e8f4fd; padding: 20px; border-radius: 8px; border: 1px solid #b6d4fe;">
+                <div style="background: #e8f4fd; padding: 20px; border-radius: 8px; border: 1px solid #b6d4fe; display: flex; flex-direction: column; gap: 20px;">
+                    
                     <div class="linha-data">
                         <label>📅 Data de Arquivamento Físico:</label>
                         <input type="date" id="dataArquivamentoManual" required style="flex: 1;">
                     </div>
 
-                    <div class="input-group" style="margin-bottom: 20px;">
-                        <label>📦 Caixa de Localização da GUIA (G):</label>
-                        <input type="text" id="locCaixaGuia" required placeholder="Ex: G-01">
-                    </div>
-
-                    <h4 style="margin-bottom: 10px; color: #003366;">📦 Definir Caixas dos Processos:</h4>
-                    <div id="containerProcessos" style="max-height: 300px; overflow-y: auto; background: white; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="input-group">
+                            <label>📦 Caixa - Localização Guia:</label>
+                            <input type="text" id="locCaixaGuia" required placeholder="Ex: G-01">
                         </div>
+                        <div class="input-group">
+                            <label>🗃️ Nº Caixa - Localização Processo:</label>
+                            <input type="text" id="locCaixaProc" required placeholder="Ex: P-045">
+                        </div>
+                    </div>
                 </div>
 
                 <button type="submit" class="btn-primary" id="btnConfirmarArq" style="background:#27ae60; padding: 15px; font-weight: bold; width: 100%; margin-top: 15px; font-size: 1.1em;">✅ CONCLUIR ARQUIVAMENTO</button>
@@ -70,7 +70,6 @@
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
         let guiaAtualId = "";
-        let listaProcessosIds = [];
 
         onAuthStateChanged(auth, (user) => { if (!user) window.location.href = "index.html"; else carregar(); });
         document.getElementById("btnLogout").onclick = () => signOut(auth);
@@ -92,32 +91,15 @@
             } catch (err) { console.error(err); }
         }
 
-        window.abrirArq = async (id, num) => {
+        window.abrirArq = (id, num) => {
             guiaAtualId = id;
-            listaProcessosIds = [];
             document.getElementById("btnConfirmarArq").disabled = false;
             document.getElementById("btnConfirmarArq").innerText = "✅ CONCLUIR ARQUIVAMENTO";
             document.getElementById("tituloModalArquivar").innerText = "Arquivar Processos da Guia: " + num;
+            
             document.getElementById("dataArquivamentoManual").value = new Date().toISOString().split('T')[0];
             document.getElementById("locCaixaGuia").value = "";
-
-            const containerProc = document.getElementById("containerProcessos");
-            containerProc.innerHTML = "Carregando processos...";
-
-            try {
-                const procsSnap = await getDocs(collection(db, "guias", id, "processos"));
-                let html = `<table class="tabela-arquivamento"><thead><tr><th>Processo</th><th>Caixa (P)</th></tr></thead><tbody>`;
-                
-                procsSnap.forEach(pDoc => {
-                    const p = pDoc.data();
-                    listaProcessosIds.push(pDoc.id);
-                    html += `<tr>
-                        <td><b>${p.numeroProcessoFisico}</b></td>
-                        <td><input type="text" id="caixaP_${pDoc.id}" placeholder="Ex: P-045" required style="margin:0; padding:5px;"></td>
-                    </tr>`;
-                });
-                containerProc.innerHTML = html + "</tbody></table>";
-            } catch (e) { containerProc.innerHTML = "Erro ao carregar processos."; }
+            document.getElementById("locCaixaProc").value = "";
 
             document.getElementById("modalArquivar").style.display = "block";
         };
@@ -130,24 +112,15 @@
             try {
                 const dataF = document.getElementById("dataArquivamentoManual").value.split("-").reverse().join("/");
                 
-                // Salva a caixa de cada processo individualmente
-                const promessas = listaProcessosIds.map(id => {
-                    const valorCaixa = document.getElementById(`caixaP_${id}`).value;
-                    return updateDoc(doc(db, "guias", guiaAtualId, "processos", id), {
-                        locCaixaProc: valorCaixa
-                    });
-                });
-                await Promise.all(promessas);
-
-                // Atualiza a Guia
                 await updateDoc(doc(db, "guias", guiaAtualId), {
                     status: "Arquivada",
                     locCaixaGuia: document.getElementById("locCaixaGuia").value,
+                    locCaixaProc: document.getElementById("locCaixaProc").value,
                     dataArquivamentoSistema: dataF,
                     arquivadoPor: auth.currentUser.email
                 });
 
-                alert("Arquivamento Concluído! Cada processo foi registrado em sua respectiva caixa.");
+                alert("Arquivamento Físico Concluído com Sucesso! A guia consta agora no Acervo.");
                 document.getElementById("modalArquivar").style.display = "none";
                 carregar();
             } catch (err) { alert("Erro ao salvar."); btn.disabled = false; }
