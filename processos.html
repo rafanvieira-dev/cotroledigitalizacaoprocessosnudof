@@ -154,37 +154,50 @@
 
             lista.innerHTML = "<p>A carregar guias...</p>";
 
-            // 1. Extrair os dados para um array para podermos ordenar
+            // 1. Extrair os dados para um array
             let guias = [];
             snap.forEach(d => {
                 guias.push({ id: d.id, ...d.data() });
             });
 
-            // 2. Ordenar da mais antiga para a mais nova
+            // Função auxiliar para converter a "dataRecebimento" (AAAA-MM-DD) num objeto Date
+            const parseDataRecebimento = (dataStr) => {
+                if (!dataStr) return new Date(); // Fallback caso esteja em branco
+                const [ano, mes, dia] = dataStr.split('-');
+                return new Date(ano, mes - 1, dia);
+            };
+
+            // 2. Ordenar da mais antiga para a mais nova baseando-se EXCLUSIVAMENTE na dataRecebimento
             guias.sort((a, b) => {
-                const dataA = a.dataCriacao?.toDate?.() || new Date(a.dataRecebimento);
-                const dataB = b.dataCriacao?.toDate?.() || new Date(b.dataRecebimento);
-                return dataA - dataB;
+                return parseDataRecebimento(a.dataRecebimento) - parseDataRecebimento(b.dataRecebimento);
             });
 
             lista.innerHTML = ""; 
+            
+            // Pega a data de hoje e "zera" a hora para comparar apenas os dias inteiros
             const dataAtual = new Date();
+            dataAtual.setHours(0, 0, 0, 0);
 
             // 3. Renderizar cada guia aplicando a regra do ⚠️
             for (const g of guias) {
                 const procsSnap = await getDocs(collection(db, "guias", g.id, "processos"));
                 const totalProcessos = procsSnap.size;
 
-                const dataGuia = g.dataCriacao?.toDate?.() || new Date(g.dataRecebimento);
+                // Pega a data de recebimento da guia e zera a hora para ficar alinhada com a data de hoje
+                const dataGuia = parseDataRecebimento(g.dataRecebimento);
+                dataGuia.setHours(0, 0, 0, 0);
+
+                // Calcula a diferença em dias
                 const diffEmMs = dataAtual - dataGuia;
                 const diasPassados = diffEmMs / (1000 * 60 * 60 * 24);
 
                 let aviso = "";
                 let corFundo = "var(--primary)"; 
                 
+                // Se não tem processos E se passaram estritamente mais de 2 dias do recebimento
                 if (totalProcessos === 0 && diasPassados > 2) {
                     aviso = " ⚠️";
-                    corFundo = "#e67e22"; 
+                    corFundo = "#e67e22"; // Fundo laranja para chamar atenção
                 }
 
                 const btn = document.createElement("button");
@@ -193,7 +206,8 @@
                 btn.innerText = `Guia: ${g.numero}${aviso}`;
                 
                 if (aviso) {
-                    btn.title = "Atenção: Guia aberta há mais de 2 dias sem nenhum processo inserido!";
+                    const dataFormatada = g.dataRecebimento ? g.dataRecebimento.split('-').reverse().join('/') : 'desconhecida';
+                    btn.title = `Atenção: Guia recebida em ${dataFormatada} (há mais de 2 dias) sem nenhum processo inserido!`;
                 }
 
                 btn.onclick = () => window.abrirGuia(g.id, g.numero);
