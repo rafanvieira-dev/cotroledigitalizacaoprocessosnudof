@@ -6,18 +6,25 @@
     <link rel="stylesheet" href="style.css">
     <style>
         .tabela-eliminacao { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-radius: 8px; overflow: hidden; }
-        .tabela-eliminacao th, .tabela-eliminacao td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
-        .tabela-eliminacao th { background: var(--primary); color: white; font-weight: bold; }
+        .tabela-eliminacao th, .tabela-eliminacao td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; vertical-align: middle; }
+        .tabela-eliminacao th { background: #c0392b; color: white; font-weight: bold; }
         .tabela-eliminacao tr:hover { background: #f9f9f9; }
-        .painel-aviso { background: #fff3e0; border-left: 5px solid #e67e22; padding: 15px 20px; border-radius: 4px; margin-bottom: 25px; }
+        .painel-aviso { background: #fdeaea; border-left: 5px solid #e74c3c; padding: 15px 20px; border-radius: 4px; margin-bottom: 25px; }
         .acoes-topo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         
+        .detalhes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid var(--border); margin-top: 15px; }
+        .detalhes-grid div { margin-bottom: 10px; }
+        .detalhes-grid span { display: block; font-size: 0.85em; color: #666; font-weight: bold; text-transform: uppercase; margin-bottom: 3px; }
+        .detalhes-grid strong { font-size: 1.1em; color: var(--text-dark); }
+        .destaque-vermelho { background: #fdeaea; border-left: 4px solid #c0392b; padding: 15px; grid-column: span 2; margin-top: 10px; border-radius: 4px; }
+        
         @media print {
-            #sidebar, .acoes-topo, button { display: none !important; }
+            #sidebar, .acoes-topo, button, .col-acoes { display: none !important; }
             body { background: white; }
             #content { padding: 0; }
             .tabela-eliminacao { box-shadow: none; border: 1px solid #ddd; }
             .tabela-eliminacao th { background: #eee !important; color: #000 !important; }
+            th:nth-child(6), td:nth-child(6) { display: none !important; }
         }
     </style>
 </head>
@@ -45,18 +52,18 @@
         </aside>
         
         <main id="content">
-            <h2 class="page-title">Relatório de Eliminação de Documentos Físicos</h2>
+            <h2 class="page-title" style="color: #c0392b; border-bottom-color: #c0392b;">Relatório de Eliminação de Documentos Físicos</h2>
             
             <div class="painel-aviso">
-                <p style="color: #d35400; font-weight: bold; margin: 0;">⚠️ Estes processos atingiram o prazo de guarda estipulado na Tabela de Temporalidade e estão aptos para fragmentação/destruição física. O cálculo é feito com base na Data de Abertura original do processo.</p>
+                <p style="color: #c0392b; font-weight: bold; margin: 0;">⚠️ Estes processos cumpriram o prazo de retenção na fase corrente/intermediária. Conforme a Tabela de Temporalidade, eles não possuem valor histórico e DEVEM SER ELIMINADOS (fragmentação/destruição física).</p>
             </div>
 
             <div class="acoes-topo">
                 <div>
-                    <strong>Total de Processos aptos para destruição:</strong> 
+                    <strong>Total aptos para destruição:</strong> 
                     <span id="totalVencidos" style="font-size: 1.2rem; font-weight: bold; color: #c0392b; margin-left: 5px;">...</span>
                 </div>
-                <button class="btn-primary" style="background:#34495e; width:auto;" onclick="window.print()">🖨️ Imprimir Termo de Eliminação</button>
+                <button class="btn-primary" style="background:#2c3e50; width:auto;" onclick="window.print()">🖨️ Imprimir Termo de Eliminação</button>
             </div>
             
             <table class="tabela-eliminacao">
@@ -65,17 +72,51 @@
                         <th>Nº Processo Físico</th>
                         <th>Interessado</th>
                         <th>Regra de Classificação</th>
-                        <th>Data Abertura (Origem)</th>
-                        <th>Data de Expiração</th>
+                        <th>Data Abertura</th>
+                        <th>Data P/ Eliminação</th>
+                        <th class="col-acoes" style="text-align: center;">Ações</th>
                     </tr>
                 </thead>
                 <tbody id="listaVencidos">
                     <tr>
-                        <td colspan="5" style="text-align:center; padding: 20px;">A procurar processos no acervo do banco de dados...</td>
+                        <td colspan="6" style="text-align:center; padding: 20px;">A procurar processos para eliminação no acervo...</td>
                     </tr>
                 </tbody>
             </table>
         </main>
+    </div>
+
+    <div id="modalDetalhesProcesso" class="modal">
+        <div class="modal-content" style="width: 95%; max-width: 800px;">
+            <span class="close-btn" onclick="document.getElementById('modalDetalhesProcesso').style.display='none'" style="float: right; cursor: pointer; font-size: 1.5em;">&times;</span>
+            <h3 style="color: #c0392b; margin-bottom: 5px;">👁️ Detalhes do Processo para Eliminação</h3>
+            <p style="color: #666; margin-top: 0; margin-bottom: 20px;">Informações detalhadas antes de proceder com a destruição física.</p>
+            
+            <div class="detalhes-grid">
+                <div><span>Nº Processo Físico</span><strong id="detNumProcesso" style="color: #c0392b; font-size: 1.3em;">--</strong></div>
+                <div><span>Tipo de Processo (SEI)</span><strong id="detTipoSei">--</strong></div>
+                
+                <div style="grid-column: span 2;"><span>Interessado</span><strong id="detInteressado">--</strong></div>
+                <div style="grid-column: span 2;"><span>Assunto (Capa)</span><strong id="detAssunto">--</strong></div>
+                
+                <div><span>Localização: Guia</span><strong id="detGuia">--</strong></div>
+                <div><span>Localização: Caixa Física</span><strong id="detCaixaProc">--</strong></div>
+                
+                <div><span>Qtd. Folhas Físicas</span><strong id="detFolhas">--</strong></div>
+                <div><span>Imagens Digitalizadas</span><strong id="detImagens">--</strong></div>
+                
+                <div class="destaque-vermelho">
+                    <span style="color: #c0392b;">📋 Enquadramento Arquivístico (e-ARQ)</span>
+                    <strong id="detRegra" style="display: block; margin-bottom: 10px;">--</strong>
+                    
+                    <div style="display: flex; gap: 30px;">
+                        <div><span style="color: #c0392b;">Data Original do Processo:</span><strong id="detDataAb">--</strong></div>
+                        <div><span style="color: #c0392b;">Apto p/ Eliminação desde:</span><strong id="detDataVenc">--</strong></div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn-primary" style="margin-top: 20px; background: #7f8c8d;" onclick="document.getElementById('modalDetalhesProcesso').style.display='none'">Fechar Detalhes</button>
+        </div>
     </div>
 
     <script type="module">
@@ -83,78 +124,88 @@
         import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
+        window.processosVencidosMap = {};
+
         onAuthStateChanged(auth, (user) => { 
             if (!user) window.location.href = "index.html"; 
-            else carregarListaEliminacao();
+            else carregarLista();
         });
-        
         document.getElementById("btnLogout").onclick = () => signOut(auth);
 
-        async function carregarListaEliminacao() {
+        async function carregarLista() {
             const tbody = document.getElementById("listaVencidos");
             try {
                 const guiasSnap = await getDocs(collection(db, "guias"));
-                
-                const dataHoje = new Date();
-                dataHoje.setHours(0, 0, 0, 0);
+                const dataHoje = new Date(); dataHoje.setHours(0, 0, 0, 0);
 
-                let html = "";
-                let contagem = 0;
+                let html = ""; let contagem = 0; window.processosVencidosMap = {};
 
                 for (const guiaDoc of guiasSnap.docs) {
-                    const numeroGuia = guiaDoc.data().numero || "S/N";
-                    const caixaProc = guiaDoc.data().locCaixaProc || "Sem Caixa";
+                    const guiaData = guiaDoc.data();
+                    const numeroGuia = guiaData.numero || "S/N";
+                    const caixaProc = guiaData.locCaixaProc || "Sem Caixa";
+                    
                     const processosSnap = await getDocs(collection(db, "guias", guiaDoc.id, "processos"));
                     
                     processosSnap.forEach(procDoc => {
                         const p = procDoc.data();
+                        const procId = procDoc.id;
                         
-                        // Verifica se foi classificado e se a regra manda eliminar
+                        // O FILTRO É AQUI: Apenas Eliminação
                         if (p.metadadosArquivisticos && p.metadadosArquivisticos.destinacaoFinal === "Eliminação") {
                             
                             const dataVencimento = new Date(p.metadadosArquivisticos.dataPrevistaDestinacaoFinal);
                             dataVencimento.setHours(0, 0, 0, 0);
 
-                            // Se a data de hoje passou da data de vencimento prevista
                             if (dataHoje >= dataVencimento) {
                                 contagem++;
+                                window.processosVencidosMap[procId] = { processo: p, guia: guiaData };
                                 
                                 const dataAberturaBR = p.dataAbertura ? p.dataAbertura.split('-').reverse().join('/') : "--";
                                 const dataVencimentoBR = p.metadadosArquivisticos.dataPrevistaDestinacaoFinal.split('-').reverse().join('/');
                                 
                                 html += `
                                     <tr>
-                                        <td>
-                                            <strong>${p.numeroProcessoFisico}</strong><br>
-                                            <small style="color:#666;">Guia: ${numeroGuia} | Caixa: ${caixaProc}</small>
-                                        </td>
+                                        <td><strong>${p.numeroProcessoFisico}</strong><br><small style="color:#666;">Guia: ${numeroGuia} | Cx: ${caixaProc}</small></td>
                                         <td>${p.interessado}</td>
-                                        <td>
-                                            <strong>${p.metadadosArquivisticos.codigoClassificacaoRef}</strong><br>
-                                            <small>${p.metadadosArquivisticos.assuntoTemporalidade || 'Sem assunto definido'}</small>
-                                        </td>
+                                        <td><strong>${p.metadadosArquivisticos.codigoClassificacaoRef}</strong><br><small>${p.metadadosArquivisticos.assuntoTemporalidade || ''}</small></td>
                                         <td>${dataAberturaBR}</td>
                                         <td style="color: #c0392b; font-weight: bold;">${dataVencimentoBR}</td>
-                                    </tr>
-                                `;
+                                        <td class="col-acoes" style="text-align: center;">
+                                            <button class="btn-primary" style="background: #e74c3c; padding: 8px 15px; width: auto; font-size: 0.9em;" onclick="window.abrirDetalhesProcesso('${procId}')">👁️ Detalhes</button>
+                                        </td>
+                                    </tr>`;
                             }
                         }
                     });
                 }
-
                 document.getElementById("totalVencidos").innerText = contagem;
-
-                if (contagem === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 30px; color:#7f8c8d;">Não existem processos com o prazo de eliminação expirado até ao dia de hoje.</td></tr>`;
-                } else {
-                    tbody.innerHTML = html;
-                }
+                tbody.innerHTML = contagem === 0 ? `<tr><td colspan="6" style="text-align:center; padding: 30px; color:#7f8c8d;">Nenhum processo aguardando eliminação.</td></tr>` : html;
 
             } catch (error) {
-                console.error("Erro ao carregar lista de eliminação:", error);
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">Erro ao aceder aos dados no sistema.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">Erro ao aceder aos dados no sistema.</td></tr>`;
             }
         }
+
+        window.abrirDetalhesProcesso = function(procId) {
+            const dados = window.processosVencidosMap[procId];
+            if (!dados) return;
+            const p = dados.processo; const g = dados.guia;
+
+            document.getElementById("detNumProcesso").innerText = p.numeroProcessoFisico || "--";
+            document.getElementById("detTipoSei").innerText = p.tipoProcessoSei || "--";
+            document.getElementById("detInteressado").innerText = p.interessado || "--";
+            document.getElementById("detAssunto").innerText = p.assunto || "--";
+            document.getElementById("detGuia").innerText = g.numero || "--";
+            document.getElementById("detCaixaProc").innerText = g.locCaixaProc || "Sem Caixa Registrada";
+            document.getElementById("detFolhas").innerText = p.qtdFolhas || "--";
+            document.getElementById("detImagens").innerText = p.qtdImagensDigitalizadas ? p.qtdImagensDigitalizadas + " imgs" : "Não informado";
+            document.getElementById("detRegra").innerText = p.metadadosArquivisticos.codigoClassificacaoRef + " - " + (p.metadadosArquivisticos.assuntoTemporalidade || "");
+            document.getElementById("detDataAb").innerText = p.dataAbertura ? p.dataAbertura.split('-').reverse().join('/') : "--";
+            document.getElementById("detDataVenc").innerText = p.metadadosArquivisticos.dataPrevistaDestinacaoFinal ? p.metadadosArquivisticos.dataPrevistaDestinacaoFinal.split('-').reverse().join('/') : "--";
+            
+            document.getElementById("modalDetalhesProcesso").style.display = "block";
+        };
     </script>
 </body>
 </html>
