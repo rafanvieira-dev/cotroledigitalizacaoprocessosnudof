@@ -20,6 +20,8 @@
         .badge-arquivada { background: #eceff1; color: #455a64; }
         .badge-digitalizada { background: #fff3e0; color: #ef6c00; }
         .login-box { background: white; padding: 40px; border-radius: 8px; margin: 50px auto; width: 400px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
+        .btn-outro-sistema { background: #34495e; color: white; padding: 10px 15px; border-radius: 5px; text-decoration: none; font-weight: bold; font-size: 0.9em; display: inline-block; margin-left: 20px; transition: 0.3s; }
+        .btn-outro-sistema:hover { background: #2c3e50; transform: translateY(-2px); }
     </style>
 </head>
 <body>
@@ -53,7 +55,10 @@
             </nav>
         </aside>
         <main id="content">
-            <h2 class="page-title">Painel de Monitoramento</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">
+                <h2 style="margin:0; color: var(--primary);">Painel de Monitoramento</h2>
+                <a href="https://rafa-vieira.github.io/controlesei/" class="btn-outro-sistema">🔄DIGITALIZAÇÃO DE DOCUMENTOS</a>
+            </div>
             <div id="mainDisplay"></div>
         </main>
     </div>
