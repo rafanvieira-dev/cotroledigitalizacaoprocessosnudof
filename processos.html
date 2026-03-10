@@ -4,33 +4,26 @@
     <meta charset="UTF-8">
     <title>Inserir Processos - NUDOF</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        input[list]::-webkit-calendar-picker-indicator {
-            cursor: pointer;
-            opacity: 0.6;
-            transition: 0.2s;
-        }
-        input[list]:hover::-webkit-calendar-picker-indicator {
-            opacity: 1;
-        }
-        /* Força a exibição visual em caixa alta no campo de busca */
-        #tipoProcessoSei {
-            text-transform: uppercase;
-        }
-    </style>
 </head>
 <body>
     <div id="appInterface">
         <aside id="sidebar">
             <div class="sidebar-logo">CONTROLE DE DIGITALIZAÇÃO PROCESSOS NUDOF</div>
             <nav>
+                <div style="padding: 10px 15px; font-size: 0.8em; color: var(--secondary); font-weight: bold; text-transform: uppercase;">Fluxo Operacional</div>
                 <a href="index.html">🏠 Início / Histórico</a>
                 <a href="guia.html">➕ Nova Guia</a>
                 <a href="processos.html" class="ativo">📄 Inserir Processos</a>
                 <a href="digitalizacao.html">🖨️ Digitalização e SEI</a>
                 <a href="arquivamentoFisico.html">🗄️ Arquivar Físico</a>
                 <a href="acervo.html">📚 Consulta de Acervo</a>
-                <button id="btnLogout" class="btn-sair">🚪 Sair do Sistema</button>
+
+                <div style="padding: 10px 15px; font-size: 0.8em; color: var(--secondary); font-weight: bold; text-transform: uppercase; margin-top: 15px; border-top: 1px solid var(--border);">Gestão Arquivística (e-ARQ)</div>
+                <a href="arq_dashboard.html">📊 Painel Temporalidade</a>
+                <a href="arq_temporalidade.html">📋 Regras e Tabela</a>
+                <a href="arq_eliminacao.html">🔥 Lista de Eliminação</a>
+
+                <button id="btnLogout" class="btn-sair" style="margin-top: 20px;">🚪 Sair do Sistema</button>
             </nav>
         </aside>
 
@@ -42,362 +35,77 @@
             </div>
 
             <div id="areaProcessos" style="display:none;">
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 15px;">
-                    <h3 id="tituloGuia"></h3>
-                    <button type="button" onclick="window.fecharArea()" style="background: #95a5a6; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">❌ Fechar</button>
-                </div>
-
                 <div class="form-container">
                     <form id="formProcesso">
                         <label>Nº do Processo Físico:</label>
                         <input type="text" id="numeroProcessoFisico" placeholder="Ex: E-00/00000/0000" required>
                         
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                            <div><label>Data de Abertura:</label><input type="text" id="dataAbertura" inputmode="numeric" placeholder="DD/MM/AAAA" oninput="window.mascaraData(this)" maxlength="10" required></div>
-                            <div><label>Data de Recebimento:</label><input type="text" id="dataRecebimentoProc" inputmode="numeric" placeholder="DD/MM/AAAA" oninput="window.mascaraData(this)" maxlength="10" required></div>
+                            <div><label>Data de Abertura:</label><input type="date" id="dataAbertura" required></div>
+                            <div><label>Data de Recebimento:</label><input type="date" id="dataRecebimentoProc" required></div>
                         </div>
 
                         <label>Assunto (Capa):</label><input type="text" id="assunto" required>
-                        <label>Interessado:</label><input type="text" id="interessado" required>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div><label>Nome do Interessado:</label><input type="text" id="interessado" required></div>
+                            <div><label>Filiação (Identificação Oficial):</label><input type="text" id="filiacao" value="pais ingleses" required></div>
+                        </div>
                         <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 15px;">
                             <div><label>Qtd. Folhas:</label><input type="number" id="qtdFolhas" required></div>
-                            <div>
-                                <label>Tipo de Processo no SEI:</label>
-                                <input type="text" id="tipoProcessoSei" list="listaTiposSei" placeholder="SELECIONE OU DIGITE PARA PESQUISAR..." autocomplete="off" required>
-                                
-                                <datalist id="listaTiposSei">
-                                    </datalist>
-                            </div>
+                            <div><label>Tipo de Processo no SEI:</label><input type="text" id="tipoProcessoSei" required></div>
                         </div>
                         <button type="submit" class="btn-primary" id="btnSalvar">Gravar Processo</button>
                     </form>
-                    <p id="contadorProcs" style="font-weight: bold; text-align: center; margin-top: 15px;"></p>
-                </div>
-                <div class="form-container">
-                    <h3>Itens inseridos nesta guia:</h3>
-                    <ul id="listaProcessosUI" style="list-style: none; padding: 0; margin-top: 10px;"></ul>
                 </div>
             </div>
         </main>
     </div>
-
-    <script>
-        window.mascaraData = function(input) {
-            let v = input.value.replace(/\D/g, '');
-            if (v.length > 8) v = v.slice(0, 8);
-            if (v.length >= 5) { input.value = `${v.slice(0, 2)}/${v.slice(2, 4)}/${v.slice(4)}`; } 
-            else if (v.length >= 3) { input.value = `${v.slice(0, 2)}/${v.slice(2)}`; } 
-            else { input.value = v; }
-        };
-    </script>
-
     <script type="module">
         import { db, auth } from "./firebase.js";
-        import { collection, getDocs, addDoc, updateDoc, doc, deleteDoc, getDoc, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+        import { collection, getDocs, addDoc, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
-        const EMAILS_ADMIN = ["rafael.nascimento-vieira@defensoria.rj.def.br"];
-        let isAdmin = false;
         let guiaAtivaId = "";
-        let processoEditandoId = null;
-
-        const TIPOS_SEI_BASE = [
-            "ADMINISTRAÇÃO GERAL: AÇÃO RESCISÓRIA", "ADMINISTRAÇÃO GERAL: COMUNICAÇÃO DE VIOLAÇÃO DE PRERROGATIVA", "ADMINISTRAÇÃO GERAL: CONVITES", "ADMINISTRAÇÃO GERAL: NORMATIZAÇÃO INTERNA", "ADMINISTRAÇÃO GERAL: PLANO DE ATUAÇÃO", "ADMINISTRAÇÃO GERAL: REESTRUTURAÇÃO - DESMEMBRAMENTO, CRIAÇÃO E EXTINÇÃO DE ÓRGÃOS DE ATUAÇÃO", "ADMINISTRAÇÃO GERAL: SOLICITAÇÃO/PRESTAÇÃO DE INFORMAÇÕES", "ASSESSORIA DE ASSUNTOS INSTITUCIONAIS: CONSULTA", "CEJUR: AUXÍLIO LIVRO", "CEJUR: EDITAIS PARA PARTICIPAÇÃO DEFENSORES E SERVIDORES EM CONGRESSOS, CURSOS E SEMINÁRIOS", "CEJUR: GRUPO DE ESTUDOS E PESQUISAS", "CEJUR: HONORÁRIOS - ESTORNO", "CEJUR: HONORÁRIOS - EXECUÇÃO", "CEJUR: HONORÁRIOS - PARCELAMENTO", "COMUNICAÇÃO: SOLICITAÇÕES", "CONSELHO SUPERIOR: AFASTAMENTO DE TITULARIDADE", "CONSELHO SUPERIOR: AVALIAÇÃO DE ESTÁGIO PROBATÓRIO", "CONSELHO SUPERIOR: DELIBERAÇÃO", "CONSELHO SUPERIOR: LISTA DE ANTIGUIDADE", "CONSELHO SUPERIOR: LISTA TRÍPLICE PARA NOMEAÇÃO DO OUVIDOR", "CONSELHO SUPERIOR: PRONUNCIAMENTO, RECOMENDAÇÃO, REPRESENTAÇÃO E REQUISIÇÃO", "CONTABILIDADE: PRESTAÇÃO DE CONTAS", "CONTROLE INTERNO: PLANO DE AUDITORIA", "CONTROLE INTERNO: PRESTAÇÃO DE CONTAS DE ADIANTAMENTO", "CONTROLE INTERNO: TOMADA DE CONTAS", "CONVÊNIOS/AJUSTES: ACORDO DE COOPERAÇÃO", "COORDENAÇÃO DE DEFESA CRIMINAL: CONSULTA", "COORDENAÇÃO DE ESTÁGIO: SINDICÂNCIA", "CORREGEDORIA: AUSÊNCIA A CONVOCAÇÕES, PLANTÕES E A ÓRGÃOS DE ATUAÇÃO", "CORREGEDORIA: PETICIONAMENTO INTEGRADO", "CORREGEDORIA: PROCESSO ADMINISTRATIVO DISCIPLINAR", "CORREGEDORIA: RECLAMAÇÃO/ELOGIO/SUGESTÃO", "CORREGEDORIA: REVISÃO CRIMINAL", "CORREGEDORIA: SINDICÂNCIA", "CORREGEDORIA: SUSPEIÇÃO E IMPEDIMENTO", "DEMANDA EXTERNA: OUTRAS ENTIDADES PRIVADAS", "DEMANDA EXTERNA: OUTROS ÓRGÃOS PÚBLICOS", "GABINETE: AFASTAMENTOS DE DEFENSORES PÚBLICOS", "GABINETE: CONFLITO DE ATRIBUIÇÕES", "GABINETE: RESOLUÇÃO 1131/2022 - CASOS DE DENEGAÇÃO DA ASSISTÊNCIA JURÍDICA", "GESTÃO DA INFORMAÇÃO: CADASTRO DE USUÁRIO EXTERNO NO SEI", "GESTÃO DA INFORMAÇÃO: CADASTRO DE USUÁRIO INTERNO NO SEI", "GESTÃO DE CONTRATO: PROCESSO DE PAGAMENTO", "GESTÃO DE IMÓVEIS: CESSÃO", "GESTÃO DE IMÓVEIS: LOCAÇÃO", "GESTÃO DOCUMENTAL: ACESSO À INFORMAÇÃO", "INFRAESTRUTURA: APOIO DE ENGENHARIA CIVIL", "INFRAESTRUTURA: PROJETOS DE ARQUITETURA", "LICITAÇÃO: ACOMPANHAMENTO DE FISCALIZAÇÃO DE CONTRATOS", "LICITAÇÃO: ADESÃO A ATA DE RP-NÃO PARTICIPANTE", "LICITAÇÃO: APLICAÇÃO DE SANÇÃO DECORRENTE DE CONTRATAÇÃO", "LICITAÇÃO: DISPENSA ESPECIAL", "LICITAÇÃO: INEXIGIBILIDADE", "LICITAÇÃO: PLANO DE AQUISIÇÕES", "LICITAÇÃO: PREGÃO ELETRÔNICO", "LICITAÇÃO: PREGÃO ELETRÔNICO-REGISTRO DE PREÇO", "LICITAÇÃO: PRESTAÇÃO DE SERVIÇOS", "LICITAÇÃO: TERMO DE AJUSTE DE CONTAS", "MATERIAL: DESFAZIMENTO DE MATERIAL DE CONSUMO", "MATERIAL: DESFAZIMENTO DE MATERIAL PERMANENTE", "MATERIAL: MOVIMENTAÇÃO DE MATERIAL PERMANENTE", "ORÇAMENTO E FINANÇAS: ADIANTAMENTO", "ORÇAMENTO E FINANÇAS: DIÁRIA DE DESLOCAMENTO DE SERVIDOR", "ORÇAMENTO E FINANÇAS: ESTIMATIVA DE RECEITA", "ORÇAMENTO E FINANÇAS: LIQUIDAÇÃO DE DESPESAS", "ORÇAMENTO E FINANÇAS: PAGAMENTO DE CONVÊNIO", "ORÇAMENTO E FINANÇAS: RECONHECIMENTO DE DÍVIDA", "ORGANIZAÇÃO E FUNCIONAMENTO: ELEIÇÃO DE CONSELHEIRO CLASSISTA", "ORGANIZAÇÃO E FUNCIONAMENTO: INFORMAÇÕES SOBRE O ÓRGÃO", "PAGAMENTO: DESCONTOS PREVIDENCIÁRIOS - RPPS", "PAGAMENTO: RECONHECIMENTO DE DÍVIDA COM DEFENSOR/SERVIDOR (FATO GERADOR HÁ MAIS DE 2 ANOS)", "PATRIMÔNIO: GESTÃO DE ACERVO BIBLIOGRÁFICO", "PESSOAL: ADIAMENTO DE POSSE EM CONCURSO DE SERVIDOR", "PESSOAL: ADICIONAL DE QUALIFICAÇÃO DO(A) SERVIDOR(A)", "PESSOAL: AFASTAMENTO PARA CONCORRER A MANDATO ELETIVO", "PESSOAL: AFASTAMENTO PARA CURSO DE FORMAÇÃO", "PESSOAL: AFASTAMENTO PARA EXERCER MANDATO ELETIVO", "PESSOAL: AFASTAMENTO PARA SERVIÇO ELEITORAL (TRE)", "PESSOAL: AFASTAMENTO PARA SERVIR EM ORGANISMO INTERNACIONAL", "PESSOAL: APOSENTADORIA - CONCESSÃO", "PESSOAL: APOSENTADORIA - PENSÃO VITALÍCIA", "PESSOAL: APOSENTADORIA - REVISÃO", "PESSOAL: APRESENTAÇÃO DE CERTIFICADO DE CURSO", "PESSOAL: ASSENTAMENTO FUNCIONAL DO DEFENSOR", "PESSOAL: ASSENTAMENTO FUNCIONAL DO SERVIDOR", "PESSOAL: ATUALIZAÇÃO DE PENSÃO", "PESSOAL: AUSÊNCIA EM RAZÃO DE CASAMENTO", "PESSOAL: AUSÊNCIA POR FALECIMENTO DE FAMILIAR", "PESSOAL: AUXÍLIO SAÚDE DE DEFENSOR PÚBLICO", "PESSOAL: AUXÍLIO SAÚDE DE SERVIDOR", "PESSOAL: AUXÍLIO TRANSPORTE - DEFENSOR", "PESSOAL: AVALIAÇÃO DE DESEMPENHO INDIVIDUAL", "PESSOAL: AVALIAÇÃO DE ESTÁGIO PROBATÓRIO DE SERVIDOR", "PESSOAL: AVERBAÇÃO DE TEMPO DE SERVIÇO", "PESSOAL: CADASTRAMENTO DE CONSIGNATÁRIAS", "PESSOAL: CAPACITAÇÃO PARA A SERVIDORA E PARA O SERVIDOR PROMOVIDA POR OUTRA INSTITUIÇÃO", "PESSOAL: CESSÃO DE DEFENSOR PARA OUTRO ÓRGÃO", "PESSOAL: CESSÃO DE SERVIDOR PARA OUTRO ÓRGÃO", "PESSOAL: CONCESSÃO E FRUIÇÃO DE LICENÇA ESPECIAL DE DEFENSOR", "PESSOAL: CONCESSÃO E FRUIÇÃO DE LICENÇA ESPECIAL DE SERVIDOR", "PESSOAL: CONCESSÃO E REVISÃO DE ABONO PERMANÊNCIA E BENEFÍCIO DE PERMANÊNCIA", "PESSOAL: CONCURSO DE LOTAÇÃO", "PESSOAL: CONCURSO DE REMOÇÃO", "PESSOAL: CONCURSO PÚBLICO - ORGANIZAÇÃO", "PESSOAL: CONCURSO PÚBLICO DE DEFENSOR - ORGANIZAÇÃO", "PESSOAL: CONTROLE DE FREQUÊNCIA", "PESSOAL: CURSO NO EXTERIOR - SEM ÔNUS", "PESSOAL: DESCONTO DE PENSÃO ALIMENTÍCIA", "PESSOAL: DEVOLUÇÃO/EXONERAÇÃO DE SERVIDOR CEDIDO", "PESSOAL: EMISSÃO DE CERTIDÃO DE TEMPO DE SERVIÇO DE EX-SERVIDOR PARA O ESTADO DO RIO DE JANEIRO", "PESSOAL: EMISSÃO DE CERTIDÃO DE TEMPO DE SERVIÇO DE EX-SERVIDOR PARA OUTROS ENTES FEDERATIVOS", "PESSOAL: EMISSÃO DE CERTIDÕES E DECLARAÇÕES", "PESSOAL: EXONERAÇÃO DE CARGO COMISSIONADO", "PESSOAL: EXONERAÇÃO DE CARGO EFETIVO", "PESSOAL: FALECIMENTO DE SERVIDOR/DEFENSOR", "PESSOAL: FÉRIAS DE DEFENSOR", "PESSOAL: FÉRIAS DE SERVIDOR(A)", "PESSOAL: FOLHA DE PAGAMENTO", "PESSOAL: GRATIFICAÇÃO - CONCESSÃO/ MAJORAÇÃO/ REDUÇÃO", "PESSOAL: GRATIFICAÇÃO POR ENCARGO - CURSO/CONCURSO", "PESSOAL: INCORPORAÇÃO DE CARGO EM COMISSÃO", "PESSOAL: ISENÇÃO DE IMPOSTO DE RENDA", "PESSOAL: LICENÇA AMAMENTAÇÃO", "PESSOAL: LICENÇA PARA TRATAMENTO DA PRÓPRIA SAÚDE", "PESSOAL: LICENÇA PARA TRATAR DE INTERESSES PARTICULARES", "PESSOAL: LICENÇA PATERNIDADE", "PESSOAL: LICENÇA POR DOENÇA EM PESSOA DA FAMÍLIA", "PESSOAL: LICENÇA SEM VENCIMENTO PARA ACOMPANHAR CÔNJUGE", "PESSOAL: LICENÇA SEM VENCIMENTO PARA TRATO DE INTERESSE PARTICULAR DE SERVIDOR", "PESSOAL: NOMEAÇÃO DE CARGO COMISSIONADO", "PESSOAL: ORIENTAÇÕES E DIRETRIZES GERAIS", "PESSOAL: PAGAMENTO DE ACUMULAÇÃO DE DEFENSOR", "PESSOAL: PAGAMENTO DE BENEFÍCIO", "PESSOAL: PENSÃO POR MORTE DE SERVIDOR", "PESSOAL: PERMUTA DE SERVIDORES", "PESSOAL: PROGRESSÃO E PROMOÇÃO (QUADRO EFETIVO)", "PESSOAL: PROMOVER DEFENSOR", "PESSOAL: PROVIMENTO - NOMEAÇÃO PARA CARGO COMISSIONADO", "PESSOAL: PROVIMENTO - NOMEAÇÃO PARA CARGO EFETIVO", "PESSOAL: PROVIMENTO - POR READAPTAÇÃO", "PESSOAL: RECADASTRAMENTO DE SERVIDORES INATIVOS/PENSIONISTAS", "PESSOAL: RECURSO - INAPTIDÃO EM EXAME ADMISSIONAL", "PESSOAL: REDUÇÃO DE CARGA HORÁRIA", "PESSOAL: REGULARIZAÇÃO DE CESSÃO - DEVOLUÇÃO DE CEDIDO", "PESSOAL: REGULARIZAÇÃO DE CESSÃO - NOMEAÇÃO DE SERVIDOR CEDIDO", "PESSOAL: REMOÇÃO POR PERMUTA DE TITULARIDADE", "PESSOAL: RESSARCIMENTO AO ERÁRIO", "PESSOAL: RESTRUTURAÇÃO DE CARGOS E FUNÇÕES", "PESSOAL: RETRIBUIÇÃO POR CARGO EM COMISSÃO", "PESSOAL: SALÁRIO-FAMÍLIA", "PESSOAL: SAÚDE - PRONTUÁRIO MÉDICO", "PESSOAL: TRIÊNIO", "PLANEJAMENTO ESTRATÉGICO: ELABORAÇÃO DO PPA E EXECUÇÃO DO PPA", "TECNOLOGIA DA INFORMAÇÃO: GESTÃO DE BENS E SERVIÇOS DE TI", "TECNOLOGIA DA INFORMAÇÃO: NORMATIZAÇÃO INTERNA", "TUTELA COLETIVA: PROCEDIMENTO DE INSTRUÇÃO"
-        ];
 
         onAuthStateChanged(auth, (user) => { 
             if (!user) window.location.href = "index.html"; 
-            else {
-                isAdmin = EMAILS_ADMIN.includes(user.email);
-                carregarGuias(); 
-                atualizarDatalistSei(); 
-            }
+            else carregarGuias(); 
         });
-
-        function atualizarDatalistSei() {
-            const datalist = document.getElementById("listaTiposSei");
-            const recentes = JSON.parse(localStorage.getItem("recentesSei") || "[]");
-            datalist.innerHTML = "";
-            
-            if (recentes.length > 0) {
-                recentes.forEach(tipo => { datalist.innerHTML += `<option value="${tipo}">`; });
-                datalist.innerHTML += `<option value="-------------------------------------------" disabled>`;
-            }
-            
-            TIPOS_SEI_BASE.forEach(tipo => {
-                if (!recentes.includes(tipo)) { datalist.innerHTML += `<option value="${tipo}">`; }
-            });
-        }
-
-        function salvarRecente(tipo) {
-            const tipoLimpo = tipo.toUpperCase();
-            if (!TIPOS_SEI_BASE.includes(tipoLimpo)) return;
-            
-            let recentes = JSON.parse(localStorage.getItem("recentesSei") || "[]");
-            recentes = recentes.filter(r => r !== tipoLimpo);
-            recentes.unshift(tipoLimpo); 
-            if (recentes.length > 5) recentes.pop(); 
-            
-            localStorage.setItem("recentesSei", JSON.stringify(recentes));
-            atualizarDatalistSei();
-        }
 
         async function carregarGuias() {
             const lista = document.getElementById("listaGuias");
             const q = query(collection(db, "guias"), where("status", "==", "Aberta"));
             const snap = await getDocs(q);
-            
-            if (snap.empty) {
-                lista.innerHTML = "<p>Não há guias abertas.</p>";
-                return;
-            }
-
-            lista.innerHTML = "<p>A carregar guias...</p>";
-
-            // 1. Extrair os dados para um array
-            let guias = [];
-            snap.forEach(d => {
-                guias.push({ id: d.id, ...d.data() });
-            });
-
-            // Função auxiliar para converter a "dataRecebimento" (AAAA-MM-DD) num objeto Date
-            const parseDataRecebimento = (dataStr) => {
-                if (!dataStr) return new Date(); // Fallback caso esteja em branco
-                const [ano, mes, dia] = dataStr.split('-');
-                return new Date(ano, mes - 1, dia);
-            };
-
-            // 2. Ordenar da mais antiga para a mais nova baseando-se EXCLUSIVAMENTE na dataRecebimento
-            guias.sort((a, b) => {
-                return parseDataRecebimento(a.dataRecebimento) - parseDataRecebimento(b.dataRecebimento);
-            });
-
             lista.innerHTML = ""; 
-            
-            // Pega a data de hoje e "zera" a hora para comparar apenas os dias inteiros
-            const dataAtual = new Date();
-            dataAtual.setHours(0, 0, 0, 0);
-
-            // 3. Renderizar cada guia aplicando a regra do ⚠️
-            for (const g of guias) {
-                const procsSnap = await getDocs(collection(db, "guias", g.id, "processos"));
-                const totalProcessos = procsSnap.size;
-
-                // Pega a data de recebimento da guia e zera a hora para ficar alinhada com a data de hoje
-                const dataGuia = parseDataRecebimento(g.dataRecebimento);
-                dataGuia.setHours(0, 0, 0, 0);
-
-                // Calcula a diferença em dias
-                const diffEmMs = dataAtual - dataGuia;
-                const diasPassados = diffEmMs / (1000 * 60 * 60 * 24);
-
-                let aviso = "";
-                let corFundo = "var(--primary)"; 
-                
-                // Se não tem processos E se passaram estritamente mais de 2 dias do recebimento
-                if (totalProcessos === 0 && diasPassados > 2) {
-                    aviso = " ⚠️";
-                    corFundo = "#e67e22"; // Fundo laranja para chamar atenção
-                }
-
+            snap.forEach(d => {
+                const g = d.data();
                 const btn = document.createElement("button");
-                btn.className = "btn-guia-item";
-                btn.style.cssText = `background:${corFundo}; color:white; padding:10px; margin:5px; border:none; border-radius:5px; cursor:pointer; font-weight:bold;`;
-                btn.innerText = `Guia: ${g.numero}${aviso}`;
-                
-                if (aviso) {
-                    const dataFormatada = g.dataRecebimento ? g.dataRecebimento.split('-').reverse().join('/') : 'desconhecida';
-                    btn.title = `Atenção: Guia recebida em ${dataFormatada} (há mais de 2 dias) sem nenhum processo inserido!`;
-                }
-
-                btn.onclick = () => window.abrirGuia(g.id, g.numero);
+                btn.innerText = `Guia: ${g.numero}`;
+                btn.style.cssText = `background:var(--primary); color:white; padding:10px; margin:5px; border:none; border-radius:5px; cursor:pointer; font-weight:bold;`;
+                btn.onclick = () => { guiaAtivaId = d.id; document.getElementById("areaProcessos").style.display = "block"; };
                 lista.appendChild(btn);
-            }
-        }
-
-        window.abrirGuia = async (id, num) => {
-            guiaAtivaId = id;
-            document.getElementById("areaProcessos").style.display = "block";
-            document.getElementById("tituloGuia").innerText = `Registrar na Guia: ${num}`;
-            await atualizarContador(id);
-            await window.atualizarLista(id);
-        };
-
-        async function atualizarContador(id) {
-            const snap = await getDocs(collection(db, "guias", id, "processos"));
-            const total = snap.size;
-            const p = document.getElementById("contadorProcs");
-            const btn = document.getElementById("btnSalvar");
-            p.innerText = `${total} / 6 processos cadastrados`;
-            if (total >= 6 && !processoEditandoId) {
-                p.style.color = "#e74c3c";
-                btn.disabled = true;
-                btn.innerText = "LIMITE DE 6 ATINGIDO";
-            } else {
-                p.style.color = "var(--secondary)";
-                btn.disabled = false;
-                if (!processoEditandoId) btn.innerText = "Gravar Processo";
-            }
-            return total;
-        }
-
-        window.fecharArea = () => {
-            document.getElementById("areaProcessos").style.display = "none";
-            guiaAtivaId = ""; processoEditandoId = null;
-            document.getElementById("formProcesso").reset();
-            const btn = document.getElementById("btnSalvar");
-            btn.innerText = "Gravar Processo";
-            btn.style.cssText = "background:var(--primary); color:white;";
-        };
-
-        window.atualizarLista = async (id) => {
-            const container = document.getElementById("listaProcessosUI");
-            const qDocs = query(collection(db, "guias", id, "processos"), orderBy("dataInsercao", "asc"));
-            const snap = await getDocs(qDocs);
-            container.innerHTML = ""; 
-            let i = 1;
-            snap.forEach(dSnap => {
-                const p = dSnap.data();
-                let btnExcluir = isAdmin ? `<button type="button" onclick="window.excluirProcesso('${dSnap.id}')" style="background:#e74c3c; color:white; padding:8px 12px; border:none; border-radius:4px; cursor:pointer; margin-left:5px; font-weight:bold;">🗑️ Excluir</button>` : "";
-                container.innerHTML += `<li style="padding:15px; background:#f8f9fa; border-left:4px solid var(--primary); margin-bottom:10px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <strong>${i++}º. Proc: ${p.numeroProcessoFisico}</strong><br>
-                        <small>Interessado: ${p.interessado} | Assunto: ${p.assunto} | Folhas: ${p.qtdFolhas}</small>
-                    </div>
-                    <div>
-                        <button type="button" onclick="window.editarProcesso('${dSnap.id}')" style="background:var(--accent); color:#333; padding:8px 12px; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">✏️ Editar</button>
-                        ${btnExcluir}
-                    </div>
-                </li>`;
             });
-        };
-
-        const converterISOParaData = (iso) => {
-            if (!iso) return "";
-            const partes = iso.split('-');
-            return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : iso;
-        };
-
-        window.editarProcesso = async (procId) => {
-            try {
-                const docRef = doc(db, "guias", guiaAtivaId, "processos", procId);
-                const procSnap = await getDoc(docRef);
-                if (procSnap.exists()) {
-                    const p = procSnap.data();
-                    document.getElementById("numeroProcessoFisico").value = p.numeroProcessoFisico;
-                    document.getElementById("dataAbertura").value = converterISOParaData(p.dataAbertura);
-                    document.getElementById("dataRecebimentoProc").value = converterISOParaData(p.dataRecebimentoProc);
-                    document.getElementById("assunto").value = p.assunto;
-                    document.getElementById("interessado").value = p.interessado;
-                    document.getElementById("qtdFolhas").value = p.qtdFolhas;
-                    document.getElementById("tipoProcessoSei").value = p.tipoProcessoSei;
-                    processoEditandoId = procId;
-                    const btn = document.getElementById("btnSalvar");
-                    btn.disabled = false;
-                    btn.innerText = "🔄 ATUALIZAR PROCESSO";
-                    btn.style.cssText = "background:var(--accent); color:#333;";
-                    window.scrollTo({ top: 0, behavior: 'smooth' }); 
-                }
-            } catch (err) { alert("Erro ao carregar dados."); }
-        };
-
-        window.excluirProcesso = async (procId) => {
-            if(confirm("Deseja excluir este processo?")) {
-                try {
-                    await deleteDoc(doc(db, "guias", guiaAtivaId, "processos", procId));
-                    await atualizarContador(guiaAtivaId);
-                    await window.atualizarLista(guiaAtivaId);
-                } catch (err) { alert("Erro ao excluir."); }
-            }
-        };
-
-        const converterDataParaISO = (dataBr) => {
-            if (!dataBr) return "";
-            const partes = dataBr.split('/');
-            return partes.length === 3 ? `${partes[2]}-${partes[1]}-${partes[0]}` : dataBr;
-        };
+        }
 
         document.getElementById("formProcesso").onsubmit = async (e) => {
             e.preventDefault();
-            const dataAb = document.getElementById("dataAbertura").value;
-            const dataRec = document.getElementById("dataRecebimentoProc").value;
-            const tipoSei = document.getElementById("tipoProcessoSei").value.toUpperCase();
-            const numeroDigitado = document.getElementById("numeroProcessoFisico").value.trim();
-            
-            if (dataAb.length < 10 || dataRec.length < 10) return alert("Preencha as datas completamente.");
-            
             try {
-                const btn = document.getElementById("btnSalvar");
-                btn.disabled = true;
-                btn.innerText = "A verificar duplicatas...";
-
-                const guiasSnap = await getDocs(collection(db, "guias"));
-                let existeDuplicata = false;
-
-                for (const guiaDoc of guiasSnap.docs) {
-                    const qDuplicata = query(collection(db, "guias", guiaDoc.id, "processos"), where("numeroProcessoFisico", "==", numeroDigitado));
-                    const snapDuplicata = await getDocs(qDuplicata);
-                    
-                    snapDuplicata.forEach(docSnap => {
-                        if (processoEditandoId !== docSnap.id) {
-                            existeDuplicata = true;
-                        }
-                    });
-
-                    if (existeDuplicata) break;
-                }
-
-                if (existeDuplicata) {
-                    btn.disabled = false;
-                    btn.innerText = processoEditandoId ? "🔄 ATUALIZAR PROCESSO" : "Gravar Processo";
-                    return alert(`🚨 AVISO: O processo nº ${numeroDigitado} já foi cadastrado no sistema!\nNão é permitida a inserção de duplicatas.`);
-                }
-            } catch (error) {
-                console.error("Erro ao verificar duplicidade:", error);
-                document.getElementById("btnSalvar").disabled = false;
-                document.getElementById("btnSalvar").innerText = processoEditandoId ? "🔄 ATUALIZAR PROCESSO" : "Gravar Processo";
-                return alert("🚨 Erro na comunicação com o banco de dados. Tente novamente.");
-            }
-
-            if (processoEditandoId) {
-                try {
-                    await updateDoc(doc(db, "guias", guiaAtivaId, "processos", processoEditandoId), {
-                        numeroProcessoFisico: numeroDigitado,
-                        dataAbertura: converterDataParaISO(dataAb),
-                        dataRecebimentoProc: converterDataParaISO(dataRec),
-                        assunto: document.getElementById("assunto").value,
-                        interessado: document.getElementById("interessado").value,
-                        qtdFolhas: document.getElementById("qtdFolhas").value,
-                        tipoProcessoSei: tipoSei
-                    });
-                    salvarRecente(tipoSei);
-                    processoEditandoId = null;
-                    document.getElementById("btnSalvar").innerText = "Gravar Processo";
-                    document.getElementById("formProcesso").reset();
-                    await atualizarContador(guiaAtivaId);
-                    await window.atualizarLista(guiaAtivaId);
-                } catch (err) { alert("Erro ao atualizar."); }
-            } else {
-                try {
-                    const dataRecGuardar = document.getElementById("dataRecebimentoProc").value;
-                    await addDoc(collection(db, "guias", guiaAtivaId, "processos"), {
-                        numeroProcessoFisico: numeroDigitado,
-                        dataAbertura: converterDataParaISO(dataAb),
-                        dataRecebimentoProc: converterDataParaISO(dataRec),
-                        assunto: document.getElementById("assunto").value,
-                        interessado: document.getElementById("interessado").value,
-                        qtdFolhas: document.getElementById("qtdFolhas").value,
-                        tipoProcessoSei: tipoSei,
-                        dataInsercao: serverTimestamp(),
-                        inseridoPor: auth.currentUser.email
-                    });
-                    salvarRecente(tipoSei);
-                    document.getElementById("formProcesso").reset();
-                    document.getElementById("dataRecebimentoProc").value = dataRecGuardar;
-                    await atualizarContador(guiaAtivaId);
-                    await window.atualizarLista(guiaAtivaId);
-                } catch (err) { alert("Erro ao salvar."); }
-            }
+                await addDoc(collection(db, "guias", guiaAtivaId, "processos"), {
+                    numeroProcessoFisico: document.getElementById("numeroProcessoFisico").value,
+                    dataAbertura: document.getElementById("dataAbertura").value,
+                    dataRecebimentoProc: document.getElementById("dataRecebimentoProc").value,
+                    assunto: document.getElementById("assunto").value,
+                    interessado: document.getElementById("interessado").value,
+                    filiacao: document.getElementById("filiacao").value,
+                    qtdFolhas: document.getElementById("qtdFolhas").value,
+                    tipoProcessoSei: document.getElementById("tipoProcessoSei").value,
+                    dataInsercao: serverTimestamp(),
+                    inseridoPor: auth.currentUser.email
+                });
+                document.getElementById("formProcesso").reset();
+                document.getElementById("filiacao").value = "pais ingleses";
+                alert("Salvo com sucesso!");
+            } catch (err) { alert("Erro ao salvar."); }
         };
         document.getElementById("btnLogout").onclick = () => signOut(auth);
     </script>
