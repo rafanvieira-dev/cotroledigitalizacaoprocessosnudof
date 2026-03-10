@@ -13,21 +13,30 @@
     <style>
         .guia-card-arquivada { background: var(--white); border-radius: 8px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 6px solid #7f8c8d; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .data-header-btn { width: 100%; color: white; padding: 12px; border: none; border-radius: 5px; text-align: left; font-weight: bold; margin: 10px 0 5px 0; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; }
+        
         .btn-caixa { background: var(--secondary); font-size: 1.1em; margin-bottom: 5px; }
         .btn-caixa:hover { opacity: 0.9; }
         .grupo-caixa { display: none; margin-bottom: 25px; padding-left: 15px; border-left: 3px dashed var(--border); margin-left: 10px; padding-top: 10px; }
+        
         .btn-caixa-docs { background: var(--primary); font-size: 1em; margin-bottom: 5px; margin-left: 10px; width: calc(100% - 10px); }
         .btn-caixa-docs:hover { opacity: 0.9; }
         .grupo-caixa-docs { display: none; margin-bottom: 15px; padding-left: 15px; border-left: 3px dotted var(--border); margin-left: 20px; padding-top: 10px; }
+
         .contador-guias { background: var(--accent); color: #333; padding: 3px 12px; border-radius: 12px; font-size: 0.85em; margin-left: 10px; font-weight: bold; }
         .badge-user { font-size: 0.75em; color: #666; display: block; margin-top: 5px; }
+        
         .filtros-relatorio { background: var(--white); padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .linha-busca { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
         .linha-relatorios { display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
         .input-busca { width: 100%; padding: 12px; border-radius: 6px; border: 2px solid var(--secondary); font-size: 1.1em; outline: none; }
+        
         .dash-card { background: var(--sidebar-bg); padding: 20px; border-radius: 8px; flex: 1; text-align: center; border: 1px solid var(--border); }
         .dash-card h4 { margin: 0; color: var(--primary); font-size: 1.1em; }
         .dash-card h2 { margin: 10px 0 0 0; font-size: 2.5em; color: var(--secondary); }
+
+        input[list]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; transition: 0.2s; }
+        input[list]:hover::-webkit-calendar-picker-indicator { opacity: 1; }
+
         @media print {
             body * { visibility: hidden; }
             #modalDashboard, #modalDashboard * { visibility: visible; }
@@ -73,7 +82,7 @@
                 </div>
             </div>
             
-            <div id="listaArquivadas"><p>Buscando acervo no banco de dados...</p></div>
+            <div id="listaArquivadas"><p>A processar o acervo no banco de dados...</p></div>
         </main>
     </div>
 
@@ -86,26 +95,24 @@
     </div>
 
     <div id="modalClassificacao" class="modal">
-        <div class="modal-content" style="width: 95%; max-width: 600px;">
+        <div class="modal-content" style="width: 95%; max-width: 700px;">
             <span class="close-btn" onclick="document.getElementById('modalClassificacao').style.display='none'" style="float: right; cursor: pointer; font-size: 1.5em;">&times;</span>
-            <h3 style="color: var(--primary); margin-bottom: 15px;">⚖️ Classificar Processo Arquivístico</h3>
-            <p><strong>Processo:</strong> <span id="classifNumeroProc"></span></p>
+            <h3 style="color: var(--primary); margin-bottom: 15px;">⚖️ Classificar Processo Físico</h3>
+            <p><strong>Processo:</strong> <span id="classifNumeroProc" style="color:var(--secondary); font-weight:bold;"></span></p>
+            
             <form id="formClassificacao">
                 <input type="hidden" id="classifGuiaId">
                 <input type="hidden" id="classifProcId">
                 <input type="hidden" id="classifDataAbertura">
                 
-                <label>Filiação (Apenas para identificação formal):</label>
+                <label style="font-weight:bold; margin-top:10px; display:block;">Filiação (Apenas para identificação formal):</label>
                 <input type="text" id="classifFiliacao" value="pais ingleses" required>
                 
-                <label>Classificação na Tabela de Temporalidade:</label>
-                <select id="classifCodigo" required>
-                    <option value="">-- Selecione a Regra --</option>
-                    <option value="040.1" data-anos="5" data-dest="Eliminação">040.1 - Pessoal: Férias de Servidor (5 Anos -> Eliminação)</option>
-                    <option value="010.2" data-anos="10" data-dest="Guarda Permanente">010.2 - Normatização (10 Anos -> Guarda Permanente)</option>
-                </select>
+                <label style="font-weight:bold; margin-top:15px; display:block;">Código de Classificação (Digite para buscar):</label>
+                <input type="text" id="classifCodigoBusca" list="listaRegrasArq" placeholder="Ex: 0-2-4-2 ou Férias" required style="font-size: 1.1em; border: 2px solid var(--secondary);">
+                <datalist id="listaRegrasArq"></datalist>
                 
-                <button type="submit" class="btn-primary" style="margin-top: 15px;">Aplicar Classificação</button>
+                <button type="submit" class="btn-primary" style="margin-top: 25px; padding: 15px; font-size:1.1em;">Confirmar Tabela de Temporalidade</button>
             </form>
         </div>
     </div>
@@ -148,10 +155,262 @@
         let estatisticasGlobais = [];
         let chartProducao = null;
 
+        // --- TABELA DE TEMPORALIDADE OFICIAL (Defensoria Pública RJ) ---
+        const tabelaOficialDPRJ = [
+            { cod: "0-0-1", ass: "Modernização e Reestruturação Administrativa", anos: 2, dest: "Guarda Permanente" },
+            { cod: "0-0-2-1", ass: "Planos, Programas e Projetos de Trabalho", anos: 5, dest: "Guarda Permanente" },
+            { cod: "0-0-3-1", ass: "Relatório de Atividades Institucional (Final)", anos: 5, dest: "Guarda Permanente" },
+            { cod: "0-0-3-2", ass: "Relatório de Atividades Setorial", anos: 5, dest: "Eliminação" },
+            { cod: "0-0-3-3", ass: "Estatística p/ Elaboração de Relatórios", anos: 2, dest: "Eliminação" },
+            { cod: "0-0-4", ass: "Acordo, Ajuste, Contrato e/ou Convênio", anos: 10, dest: "Guarda Permanente" },
+            { cod: "0-0-5-1", ass: "Fiscalização de Acordo/Contrato", anos: 25, dest: "Eliminação" },
+            { cod: "0-0-5-2", ass: "Apuração de Irregularidade de Licitante/Fornecedor", anos: 25, dest: "Eliminação" },
+            { cod: "0-0-6-1-1", ass: "Correição Ordinária e Extraordinária", anos: 25, dest: "Eliminação" },
+            { cod: "0-0-6-1-2", ass: "Inspeção Ordinária e Extraordinária", anos: 25, dest: "Eliminação" },
+            { cod: "0-0-6-1-3", ass: "Apuração de Possível Desvio de Conduta", anos: 52, dest: "Eliminação" },
+            { cod: "0-0-6-2-1", ass: "Auditoria de Controle Interno", anos: 25, dest: "Eliminação" },
+            { cod: "0-0-6-2-2", ass: "Inspeção de Controle Interno", anos: 25, dest: "Eliminação" },
+            { cod: "0-0-6-2-3", ass: "Acompanhamento de Controle Interno", anos: 25, dest: "Eliminação" },
+            { cod: "0-0-6-3-1-1", ass: "Manifestação de Interesse do Cidadão", anos: 5, dest: "Eliminação" },
+            { cod: "0-0-6-3-1-2", ass: "Manifestação de Interesse Administrativo", anos: 25, dest: "Eliminação" },
+            { cod: "0-0-6-3-1-3", ass: "Manifestação sobre Suposta Irregularidade Interna", anos: 52, dest: "Eliminação" },
+            { cod: "0-0-6-3-2", ass: "Comunicação de Ouvidoria", anos: 25, dest: "Eliminação" },
+            { cod: "0-0-7", ass: "Sanção Administrativa", anos: 25, dest: "Guarda Permanente" },
+            { cod: "0-0-8-1", ass: "Acompanhamento e Instrução de Ação Judicial", anos: 5, dest: "Guarda Permanente" },
+            { cod: "0-0-9", ass: "Atuação de Defensor Público", anos: 5, dest: "Guarda Permanente" },
+            { cod: "0-1-0", ass: "Organização e Funcionamento (Geral)", anos: 2, dest: "Guarda Permanente" },
+            { cod: "0-1-0-1", ass: "Registro nos Órgãos Competentes", anos: 5, dest: "Eliminação" },
+            { cod: "0-1-0-2", ass: "Regimento, Regulamento, Estatuto, Organograma", anos: 5, dest: "Guarda Permanente" },
+            { cod: "0-1-0-3", ass: "Audiência, Despacho, Reunião", anos: 3, dest: "Eliminação" },
+            { cod: "0-1-1-1", ass: "Comissão, Conselho, Grupo de Trabalho (Geral)", anos: 10, dest: "Eliminação" },
+            { cod: "0-1-1-1-1", ass: "Ato de Criação / Ata de Comissão", anos: 10, dest: "Guarda Permanente" },
+            { cod: "0-1-1-1-2", ass: "Comunicação de afastamento de membro", anos: 10, dest: "Guarda Permanente" },
+            { cod: "0-1-2-1-1", ass: "Credenciamento de jornalistas", anos: 1, dest: "Eliminação" },
+            { cod: "0-1-2-1-2", ass: "Entrevista, Noticiário, Reportagem", anos: 2, dest: "Eliminação" },
+            { cod: "0-1-2-1-3", ass: "Release de matérias e Notas", anos: 2, dest: "Guarda Permanente" },
+            { cod: "0-1-2-1-4", ass: "Diário Oficial Eletrônico da DPRJ", anos: 1, dest: "Guarda Permanente" },
+            { cod: "0-1-2-2-1", ass: "Informativo Interno e Boletins", anos: 2, dest: "Guarda Permanente" },
+            { cod: "0-1-2-2-2", ass: "Clipping (compilação de notícias)", anos: 2, dest: "Guarda Permanente" },
+            { cod: "0-1-2-3", ass: "Campanha Institucional / Publicidade", anos: 15, dest: "Guarda Permanente" },
+            { cod: "0-1-2-4", ass: "Registro Sonoro, Fotográfico e Audiovisual", anos: 15, dest: "Guarda Permanente" },
+            { cod: "0-1-3-1-1", ass: "Solenidade, Comemoração, Homenagem", anos: 10, dest: "Guarda Permanente" },
+            { cod: "0-1-3-2-1", ass: "Feira, Exposição, Palestra", anos: 10, dest: "Guarda Permanente" },
+            { cod: "0-1-3-2-2", ass: "Concurso (Habilitação, julgamento, recursos)", anos: 10, dest: "Guarda Permanente" },
+            { cod: "0-1-3-3", ass: "Felicitação, Convite, Pêsames", anos: 2, dest: "Eliminação" },
+            { cod: "0-1-3-4", ass: "Visita e Visitante", anos: 2, dest: "Eliminação" },
+            { cod: "0-1-3-4-1", ass: "Livro de Registro de Presença", anos: 5, dest: "Guarda Permanente" },
+            { cod: "0-1-3-5", ass: "Protesto, Reivindicação, Reclamação", anos: 2, dest: "Eliminação" },
+            { cod: "0-1-3-6", ass: "Pedido e Informação Diversa", anos: 2, dest: "Eliminação" },
+            { cod: "0-1-3-7", ass: "Premiação / Elogios à DPRJ", anos: 2, dest: "Guarda Permanente" },
+            { cod: "0-1-4-1", ass: "Gestão Ambiental", anos: 5, dest: "Eliminação" },
+            { cod: "0-1-4-2", ass: "Responsabilidade Social", anos: 5, dest: "Eliminação" },
+            { cod: "0-1-4-3", ass: "Assistência Social", anos: 5, dest: "Eliminação" },
+            { cod: "0-2-0-1", ass: "Identificação Funcional", anos: 2, dest: "Eliminação" },
+            { cod: "0-2-0-2", ass: "Relação com Órgão Normatizador da Adm Pública", anos: 10, dest: "Eliminação" },
+            { cod: "0-2-0-3", ass: "Relação com o Conselho Profissional", anos: 2, dest: "Eliminação" },
+            { cod: "0-2-0-4", ass: "Relação com Sindicato / Associação", anos: 5, dest: "Guarda Permanente" },
+            { cod: "0-2-0-4-1", ass: "Movimento Reivindicatório (Greve/Paralisação)", anos: 5, dest: "Guarda Permanente" },
+            { cod: "0-2-0-5", ass: "Relação com Entidades de Financiamento", anos: 20, dest: "Eliminação" },
+            { cod: "0-2-0-5-1", ass: "Adiantamento e Empréstimo a Defensor/Servidor", anos: 5, dest: "Eliminação" },
+            { cod: "0-2-0-6", ass: "Assentamento Funcional / Cadastro / Ficha", anos: 95, dest: "Eliminação" },
+            { cod: "0-2-0-6-1", ass: "Dados Cadastrais - Atualização", anos: 2, dest: "Eliminação" },
+            { cod: "0-2-0-6-2", ass: "Comunicação de endereço eventual", anos: 1, dest: "Eliminação" },
+            { cod: "0-2-0-6-3", ass: "Solicitação de Certidões e Averbação", anos: 2, dest: "Eliminação" },
+            { cod: "0-2-0-6-4", ass: "Carta de Apresentação / Recomendação", anos: 1, dest: "Eliminação" },
+            { cod: "0-2-0-7", ass: "Horário de Expediente / Escala", anos: 5, dest: "Eliminação" },
+            { cod: "0-2-0-7-1", ass: "Controle de Frequência / Ponto Eletrônico", anos: 70, dest: "Eliminação" },
+            { cod: "0-2-0-8-1", ass: "Prêmio, Medalha e Honra ao Mérito", anos: 5, dest: "Guarda Permanente" },
+            { cod: "0-2-0-8-2", ass: "Elogio a Defensor / Servidor", anos: 95, dest: "Eliminação" },
+            { cod: "0-2-0-9", ass: "Comunicado e Informe Diverso (RH)", anos: 2, dest: "Eliminação" },
+            { cod: "0-2-0-9-1", ass: "Pedidos de Informações sobre Gestão de Pessoas", anos: 5, dest: "Eliminação" },
+            { cod: "0-2-1-1", ass: "Candidato a Cargo Público / Inscrição", anos: 3, dest: "Eliminação" },
+            { cod: "0-2-1-2", ass: "Concurso Público (Assuntos Gerais)", anos: 5, dest: "Eliminação" },
+            { cod: "0-2-1-2-1", ass: "Provas, Testes Psicotécnicos, Exames Médicos", anos: 6, dest: "Eliminação" },
+            { cod: "0-2-1-2-2", ass: "Concurso: Edital, Gabarito, Recurso, Resultado", anos: 5, dest: "Guarda Permanente" },
+            { cod: "0-2-2-1-1", ass: "Curso promovido pela DPRJ (Geral)", anos: 3, dest: "Eliminação" },
+            { cod: "0-2-2-1-1-1", ass: "Curso DPRJ: Proposta, Edital, Relatório Final", anos: 3, dest: "Guarda Permanente" },
+            { cod: "0-2-2-1-2", ass: "Curso por outra inst. com ônus (Geral)", anos: 5, dest: "Eliminação" },
+            { cod: "0-2-2-1-2-1", ass: "Curso com ônus no Brasil", anos: 10, dest: "Eliminação" },
+            { cod: "0-2-2-1-2-2", ass: "Curso com ônus no Exterior", anos: 10, dest: "Eliminação" },
+            { cod: "0-2-2-1-3-1", ass: "Curso sem ônus no Brasil", anos: 5, dest: "Eliminação" },
+            { cod: "0-2-2-1-3-2", ass: "Curso sem ônus no Exterior", anos: 5, dest: "Eliminação" },
+            { cod: "0-2-2-1-4", ass: "Comprovação de Certificação/Graduação/Pós", anos: 100, dest: "Eliminação" },
+            { cod: "0-2-2-1-5", ass: "Processo seletivo interno de capacitação", anos: 100, dest: "Eliminação" },
+            { cod: "0-2-2-2-1", ass: "Estágio promovido pela DPRJ / Residência Jurídica", anos: 5, dest: "Eliminação" },
+            { cod: "0-2-2-2-1-1", ass: "Estágio: Programa, Relatório, Avaliação", anos: 3, dest: "Guarda Permanente" },
+            { cod: "0-2-2-2-2", ass: "Concurso para Residência / Estágio (Geral)", anos: 5, dest: "Eliminação" },
+            { cod: "0-2-2-2-2-1", ass: "Concurso Estágio: Provas e Testes", anos: 6, dest: "Eliminação" },
+            { cod: "0-2-2-2-2-2", ass: "Concurso Estágio: Edital, Gabarito, Resultado", anos: 5, dest: "Guarda Permanente" },
+            { cod: "0-2-2-3-1", ass: "Congresso, Seminário, Simpósio", anos: 10, dest: "Guarda Permanente" },
+            { cod: "0-2-3-0-1", ass: "Estudo e Previsão de Pessoal", anos: 5, dest: "Guarda Permanente" },
+            { cod: "0-2-3-0-2", ass: "Criação/Transformação de Cargos e Funções", anos: 5, dest: "Guarda Permanente" },
+            { cod: "0-2-3-0-3", ass: "Reestruturação e Alteração Salarial", anos: 52, dest: "Eliminação" },
+            { cod: "0-2-3-0-3-1", ass: "Lista de Antiguidade", anos: 5, dest: "Guarda Permanente" },
+            { cod: "0-2-3-0-4", ass: "Estágio Probatório", anos: 52, dest: "Eliminação" },
+            { cod: "0-2-3-1-1", ass: "Admissão, Nomeação, Readaptação", anos: 52, dest: "Eliminação" },
+            { cod: "0-2-3-1-2", ass: "Demissão, Exoneração, Falecimento", anos: 52, dest: "Eliminação" },
+            { cod: "0-2-3-1-3", ass: "Lotação, Remoção, Transferência, Permuta", anos: 10, dest: "Eliminação" },
+            { cod: "0-2-3-1-3-1", ass: "Solicitação de Lotação/Remoção", anos: 2, dest: "Eliminação" },
+            { cod: "0-2-3-1-4", ass: "Designação, Disponibilidade, Substituição", anos: 52, dest: "Eliminação" },
+            { cod: "0-2-3-1-5", ass: "Requisição, Cessão", anos: 52, dest: "Eliminação" },
+            { cod: "0-2-3-1-5-1", ass: "Solicitação de Requisição/Cessão", anos: 2, dest: "Eliminação" },
+            { cod: "0-2-3-2", ass: "Eleição Administrativa", anos: 5, dest: "Guarda Permanente" },
+            { cod: "0-2-4-1", ass: "Folha de Pagamento / Ficha Financeira", anos: 100, dest: "Eliminação" },
+            { cod: "0-2-4-1-0", ass: "Folha de Pagamento (Assuntos Gerais)", anos: 5, dest: "Eliminação" },
+            { cod: "0-2-4-1-0-1", ass: "Contra cheque", anos: 2, dest: "Eliminação" },
+            { cod: "0-2-4-1-0-2", ass: "Comunicação de débito pendente", anos: 5, dest: "Eliminação" },
+            { cod: "0-2-4-1-1-1", ass: "Salário-família", anos: 100, dest: "Eliminação" },
+            { cod: "0-2-4-1-1-2", ass: "Abono ou provento provisório", anos: 7, dest: "Eliminação" },
+            { cod: "0-2-4-1-1-3", ass: "Abono de permanência em serviço", anos: 7, dest: "Eliminação" },
+            { cod: "0-2-4-1-2-1", ass: "Gratificação de Função", anos: 52, dest: "Eliminação" },
+            { cod: "0-2-4-1-2-2", ass: "Gratificação por Exercício de Cargo", anos: 52, dest: "Eliminação" },
+            { cod: "0-2-4-1-2-3", ass: "Gratificação Natalina (13º salário)", anos: 7, dest: "Eliminação" },
+            { cod: "0-2-4-1-2-4", ass: "Gratificação de Desempenho", anos: 100, dest: "Eliminação" },
+            { cod: "0-2-4-1-2-5", ass: "Gratificação por encargo de curso/concurso", anos: 7, dest: "Eliminação" },
+            { cod: "0-2-4-1-2-6", ass: "Gratificação de Acumulação", anos: 52, dest: "Eliminação" },
+            { cod: "0-2-4-1-2-7", ass: "Gratificação por Órgão de Deliberação Coletiva", anos: 52, dest: "Eliminação" },
+            { cod: "0-2-4-1-3-1", ass: "Adicional de Tempo de Serviço (Triênio/Quinquênio)", anos: 35, dest: "Guarda Permanente" },
+            { cod: "0-2-4-1-3-2", ass: "Adicional Noturno", anos: 52, dest: "Eliminação" },
+            { cod: "0-2-4-1-3-3", ass: "Adicional de Periculosidade", anos: 52, dest: "Eliminação" },
+            { cod: "0-2-4-1-3-4", ass: "Adicional de Insalubridade", anos: 52, dest: "Eliminação" },
+            { cod: "0-2-4-1-3-5", ass: "Adicional por Atividade Penosa", anos: 52, dest: "Eliminação" },
+            { cod: "0-2-4-1-3-6", ass: "Adicional por Serviço Extraordinário", anos: 52, dest: "Eliminação" },
+            { cod: "0-2-4-1-3-7", ass: "Adicional de Férias (1/3 e abono)", anos: 7, dest: "Eliminação" },
+            { cod: "0-2-4-1-4-1", ass: "Desconto de Contribuição Sindical", anos: 7, dest: "Eliminação" },
+            { cod: "0-2-4-1-4-2", ass: "Desconto para Plano de Seguridade Social", anos: 52, dest: "Eliminação" },
+            { cod: "0-2-4-1-4-3", ass: "Desconto de Imposto de Renda Retido", anos: 7, dest: "Eliminação" },
+            { cod: "0-2-4-1-4-4", ass: "Desconto de Pensão Alimentícia", anos: 100, dest: "Eliminação" },
+            { cod: "0-2-4-1-4-5", ass: "Consignação (Empréstimos)", anos: 100, dest: "Eliminação" },
+            { cod: "0-2-4-1-5-1", ass: "PASEP / PIS", anos: 10, dest: "Eliminação" },
+            { cod: "0-2-4-1-5-2", ass: "FGTS", anos: 52, dest: "Eliminação" },
+            { cod: "0-2-4-1-5-3", ass: "Contribuição Previdenciária Patronal", anos: 100, dest: "Eliminação" },
+            { cod: "0-2-4-2", ass: "Férias (Assuntos Gerais / Escala / Adiantamento)", anos: 7, dest: "Eliminação" },
+            { cod: "0-2-4-2-1", ass: "Concessão Individual de Férias", anos: 95, dest: "Eliminação" },
+            { cod: "0-2-4-3", ass: "Licenças (Geral - Saúde, Maternidade, Prêmio, etc.)", anos: 52, dest: "Eliminação" },
+            { cod: "0-2-4-4", ass: "Afastamentos (Geral - Estudo, Mandato, Júri, etc.)", anos: 52, dest: "Eliminação" },
+            { cod: "0-2-4-5-1", ass: "Reembolso de Despesas (Geral)", anos: 3, dest: "Eliminação" },
+            { cod: "0-2-4-5-3", ass: "Locomoção (Meio Próprio)", anos: 10, dest: "Eliminação" },
+            { cod: "0-2-4-5-4", ass: "Mudança de Domicílio / Ajuda de Custo", anos: 10, dest: "Eliminação" },
+            { cod: "0-2-4-5-6", ass: "Ressarcimento Plano de Saúde", anos: 10, dest: "Eliminação" },
+            { cod: "0-2-4-5-7", ass: "Reembolso Auxílio Livro", anos: 10, dest: "Eliminação" },
+            { cod: "0-2-4-6", ass: "Concessão para ausentar-se (Gala, Nojo, Evento)", anos: 52, dest: "Eliminação" },
+            { cod: "0-2-4-7", ass: "Auxílios (Alimentação, Transporte, Moradia, Creche)", anos: 10, dest: "Eliminação" },
+            { cod: "0-2-5-1-1", ass: "Processo Administrativo Disciplinar / Sindicância", anos: 100, dest: "Guarda Permanente" },
+            { cod: "0-2-5-1-2", ass: "Penalidade Disciplinar", anos: 100, dest: "Guarda Permanente" },
+            { cod: "0-2-6-1-1", ass: "Seguro Pessoal", anos: 10, dest: "Eliminação" },
+            { cod: "0-2-6-1-2", ass: "Auxílio Acidente, Doença, Funeral, Natalidade", anos: 10, dest: "Eliminação" },
+            { cod: "0-2-6-1-3", ass: "Auxílio Reclusão", anos: 52, dest: "Eliminação" },
+            { cod: "0-2-6-1-4-1", ass: "Pensão Provisória ou Temporária", anos: 5, dest: "Eliminação" },
+            { cod: "0-2-6-1-4-2", ass: "Pensão Vitalícia, Especial, Fundo", anos: 100, dest: "Eliminação" },
+            { cod: "0-2-6-1-5", ass: "Aposentadoria / Revisão", anos: 35, dest: "Guarda Permanente" },
+            { cod: "0-2-6-1-5-1", ass: "Solicitação de Contagem Tempo de Serviço", anos: 2, dest: "Eliminação" },
+            { cod: "0-2-6-1-5-3", ass: "Averbação / Desaverbação de Tempo de Serviço", anos: 35, dest: "Guarda Permanente" },
+            { cod: "0-2-6-1-6", ass: "Assistência à Saúde / Plano de Saúde", anos: 10, dest: "Eliminação" },
+            { cod: "0-2-6-1-6-1", ass: "Prontuário Médico do Defensor / Servidor", anos: 95, dest: "Eliminação" },
+            { cod: "0-2-6-1-7", ass: "Aquisição de Imóvel / Ocupação", anos: 5, dest: "Eliminação" },
+            { cod: "0-2-6-2-1", ass: "Prevenção de Acidentes de Trabalho", anos: 52, dest: "Eliminação" },
+            { cod: "0-2-6-2-1-1", ass: "Comissão Interna de Prevenção de Acidentes (CIPA)", anos: 8, dest: "Guarda Permanente" },
+            { cod: "0-2-6-2-2", ass: "Fornecimento de Refeição (Copa/Refeitório)", anos: 2, dest: "Eliminação" },
+            { cod: "0-2-6-3", ass: "Previdência Privada", anos: 52, dest: "Eliminação" },
+            { cod: "0-2-7-1", ass: "Missão fora da sede / Viagem a Serviço (SEM ÔNUS)", anos: 7, dest: "Eliminação" },
+            { cod: "0-2-7-2", ass: "Missão fora da sede / Viagem a Serviço (COM ÔNUS)", anos: 10, dest: "Eliminação" },
+            { cod: "0-2-8-0", ass: "Delegação de Competência / Procuração (Gerais)", anos: 5, dest: "Eliminação" },
+            { cod: "0-2-8-1", ass: "Delegação de Competência - Ordenador de Despesas", anos: 10, dest: "Eliminação" },
+            { cod: "0-2-9", ass: "Serviço Profissional Transitório (Terceirizados)", anos: 51, dest: "Eliminação" },
+            { cod: "0-3-0-1", ass: "Cadastro de Fornecedor de Material", anos: 5, dest: "Eliminação" },
+            { cod: "0-3-0-2", ass: "Especificação e Padronização de Material", anos: 3, dest: "Eliminação" },
+            { cod: "0-3-1-1-1", ass: "Compra / Aluguel de Material Permanente", anos: 10, dest: "Eliminação" },
+            { cod: "0-3-1-1-2", ass: "Aquisição de Material Perm. por Cessão/Doação", anos: 10, dest: "Eliminação" },
+            { cod: "0-3-1-2-1", ass: "Compra de Material de Consumo", anos: 10, dest: "Eliminação" },
+            { cod: "0-3-1-2-2", ass: "Aquisição de Material Consumo por Cessão/Doação", anos: 10, dest: "Eliminação" },
+            { cod: "0-3-2-0-1", ass: "Termo de Responsabilidade / Mov. de Bens (RMB)", anos: 10, dest: "Guarda Permanente" },
+            { cod: "0-3-2-1", ass: "Controle de Estoque (Almoxarifado)", anos: 2, dest: "Eliminação" },
+            { cod: "0-3-2-2", ass: "Extravio, Roubo ou Desaparecimento de Material", anos: 5, dest: "Eliminação" },
+            { cod: "0-3-3-1", ass: "Transferência de Material", anos: 10, dest: "Eliminação" },
+            { cod: "0-3-3-2", ass: "Venda e Alienação de Material", anos: 10, dest: "Eliminação" },
+            { cod: "0-3-3-4", ass: "Descarte e Inutilização de Material", anos: 10, dest: "Eliminação" },
+            { cod: "0-3-3-5", ass: "Baixa Patrimonial de Material", anos: 5, dest: "Guarda Permanente" },
+            { cod: "0-3-4-1", ass: "Ordem de Serviço p/ Instalação/Manutenção Equip.", anos: 3, dest: "Eliminação" },
+            { cod: "0-3-5", ass: "Inventário de Material Permanente e de Consumo", anos: 2, dest: "Guarda Permanente" }, // simplified 0-3-5-1/2
+            { cod: "0-4-1-0-1-1", ass: "Ordem de Serviço de Serviços Básicos", anos: 3, dest: "Eliminação" },
+            { cod: "0-4-1-0-2-1", ass: "Serviços: Água, Esgoto, Gás, Energia Elétrica", anos: 10, dest: "Eliminação" },
+            { cod: "0-4-1-0-2-2", ass: "Serviços: Transmissão de Dados, Telefonia", anos: 10, dest: "Eliminação" },
+            { cod: "0-4-1-0-3-2", ass: "Condomínio", anos: 10, dest: "Eliminação" },
+            { cod: "0-4-1-1-1", ass: "Compra de Imóvel", anos: 10, dest: "Guarda Permanente" },
+            { cod: "0-4-1-1-2", ass: "Aquisição de Imóvel por Cessão / Doação", anos: 10, dest: "Guarda Permanente" },
+            { cod: "0-4-1-1-3", ass: "Locação, Arrendamento ou Comodato de Imóvel", anos: 10, dest: "Eliminação" },
+            { cod: "0-4-1-2-1", ass: "Venda de Imóvel", anos: 10, dest: "Guarda Permanente" },
+            { cod: "0-4-1-3", ass: "Desapropriação, Reintegração, Tombamento", anos: 10, dest: "Guarda Permanente" },
+            { cod: "0-4-1-4-1", ass: "Obra: Reforma, Recuperação, Construção", anos: 10, dest: "Guarda Permanente" },
+            { cod: "0-4-1-5", ass: "Manutenção Predial (Limpeza, Elétrica, Elevadores)", anos: 3, dest: "Eliminação" },
+            { cod: "0-4-1-6", ass: "Concessão de Uso de Bens Imóveis", anos: 10, dest: "Eliminação" },
+            { cod: "0-4-1-8", ass: "Mudança Física (Com ônus / Sem ônus)", anos: 10, dest: "Eliminação" },
+            { cod: "0-4-2-1-1", ass: "Compra ou Aluguel de Veículo", anos: 10, dest: "Eliminação" },
+            { cod: "0-4-2-2", ass: "Cadastro, Licenciamento e Emplacamento", anos: 5, dest: "Eliminação" },
+            { cod: "0-4-2-3-1", ass: "Venda de Veículo", anos: 10, dest: "Eliminação" },
+            { cod: "0-4-2-4", ass: "Abastecimento, Manutenção e Reparo de Veículo", anos: 10, dest: "Eliminação" },
+            { cod: "0-4-2-5", ass: "Acidente de Veículo / Infração / Multa", anos: 10, dest: "Eliminação" },
+            { cod: "0-4-2-7", ass: "Controle e Requisição de Uso de Veículo", anos: 10, dest: "Eliminação" },
+            { cod: "0-4-3-1", ass: "Inventário de Bens Imóveis e Veículos", anos: 10, dest: "Guarda Permanente" },
+            { cod: "0-4-4-2", ass: "Serviço de Vigilância", anos: 10, dest: "Eliminação" },
+            { cod: "0-4-4-4", ass: "Seguro (Gerais)", anos: 10, dest: "Eliminação" },
+            { cod: "0-4-4-5-1", ass: "Prevenção e Brigada de Incêndio", anos: 4, dest: "Guarda Permanente" },
+            { cod: "0-4-4-6", ass: "Sinistro / Apuração", anos: 5, dest: "Eliminação" },
+            { cod: "0-4-4-7", ass: "Controle de Portaria", anos: 15, dest: "Eliminação" },
+            { cod: "0-5-0-1", ass: "Auditoria Financeira", anos: 10, dest: "Guarda Permanente" },
+            { cod: "0-5-0-2", ass: "Tributo (Imposto e Taxa)", anos: 10, dest: "Eliminação" },
+            { cod: "0-5-1-1-1", ass: "Previsão Orçamentária", anos: 5, dest: "Eliminação" },
+            { cod: "0-5-1-1-2", ass: "Proposta Orçamentária", anos: 10, dest: "Guarda Permanente" },
+            { cod: "0-5-1-1-4", ass: "Crédito Adicional e Suplementar", anos: 10, dest: "Guarda Permanente" },
+            { cod: "0-5-1-2-0", ass: "Nota de Empenho / Liquidação de Despesa", anos: 10, dest: "Eliminação" },
+            { cod: "0-5-1-2-1", ass: "Descentralização de Recurso", anos: 10, dest: "Eliminação" },
+            { cod: "0-5-2-2-1", ass: "Receita (Créditos, Taxas, Multas)", anos: 10, dest: "Eliminação" },
+            { cod: "0-5-2-2-2-1", ass: "Pagamento de Aquisição Bens e Contratos", anos: 10, dest: "Eliminação" },
+            { cod: "0-5-2-2-2-2", ass: "Concessão de Adiantamento de Despesa", anos: 10, dest: "Eliminação" },
+            { cod: "0-5-2-2-2-3", ass: "Suprimento de Fundos", anos: 10, dest: "Eliminação" },
+            { cod: "0-5-2-2-2-4", ass: "Reconhecimento de Dívida / Restos a Pagar", anos: 10, dest: "Eliminação" },
+            { cod: "0-5-3-1-2", ass: "Honorário (Processos com Pagamento/Estorno)", anos: 10, dest: "Eliminação" },
+            { cod: "0-5-5-1", ass: "Operação Bancária / Pagamentos Moeda Estrangeira", anos: 10, dest: "Eliminação" },
+            { cod: "0-5-6", ass: "Balanços / Balancetes", anos: 10, dest: "Guarda Permanente" },
+            { cod: "0-5-7-1", ass: "Tomada de Contas", anos: 10, dest: "Guarda Permanente" },
+            { cod: "0-5-7-2", ass: "Prestação de Contas", anos: 10, dest: "Guarda Permanente" },
+            { cod: "0-5-8-3", ass: "Fechamento Contábil Patrimonial / Materiais", anos: 10, dest: "Eliminação" },
+            { cod: "0-6-0-1-1-2", ass: "Publicação Diário Oficial e Veículos Oficiais", anos: 10, dest: "Eliminação" },
+            { cod: "0-6-0-2-2", ass: "Produção Editorial (Editoração)", anos: 10, dest: "Guarda Permanente" },
+            { cod: "0-6-1-1-1", ass: "Compra de Documentação Bibliográfica", anos: 10, dest: "Eliminação" },
+            { cod: "0-6-2-0", ass: "Normas e Manuais de Gestão Documental", anos: 5, dest: "Guarda Permanente" },
+            { cod: "0-6-2-2-1", ass: "Serviço Postal (Malote, Sedex)", anos: 10, dest: "Guarda Permanente" },
+            { cod: "0-6-2-2-2", ass: "Registro e Autuação de Processos (Protocolo)", anos: 5, dest: "Guarda Permanente" },
+            { cod: "0-6-2-5-2", ass: "Eliminação de Documentos (Termo e Edital)", anos: 5, dest: "Guarda Permanente" },
+            { cod: "0-6-2-5-3", ass: "Transferência e Recolhimento de Documentos", anos: 5, dest: "Guarda Permanente" },
+            { cod: "0-6-2-6", ass: "Inventário de Documentos e Processos", anos: 5, dest: "Guarda Permanente" },
+            { cod: "0-6-4-0-1", ass: "Informações sobre a DPRJ (Política de Acesso)", anos: 5, dest: "Eliminação" },
+            { cod: "0-7-1", ass: "Plano e Projeto de Informática", anos: 5, dest: "Guarda Permanente" },
+            { cod: "0-7-2-3", ass: "Aquisição de Soluções de TI (Softwares)", anos: 10, dest: "Guarda Permanente" },
+            { cod: "0-7-2-4", ass: "Sistemas Corporativos desenvolvidos pela DPRJ", anos: 2, dest: "Guarda Permanente" },
+            { cod: "0-7-3-2", ass: "Assistência Técnica de Informática", anos: 10, dest: "Eliminação" },
+            { cod: "0-7-4-1", ass: "Incidente de Segurança da Informação", anos: 52, dest: "Eliminação" },
+            { cod: "0-8-0", ass: "Associações Culturais e de Defensores", anos: 5, dest: "Guarda Permanente" }
+        ];
+
+        // FUNÇÃO PARA PREENCHER A LISTA (DATALIST)
+        function preencherTabelaArquivistica() {
+            const datalist = document.getElementById("listaRegrasArq");
+            datalist.innerHTML = "";
+            
+            tabelaOficialDPRJ.forEach(regra => {
+                const option = document.createElement("option");
+                option.value = regra.cod;
+                option.innerText = `${regra.ass} (${regra.anos} anos -> ${regra.dest})`;
+                datalist.appendChild(option);
+            });
+        }
+
         onAuthStateChanged(auth, (user) => { 
             if (!user) window.location.href = "index.html"; 
             else {
                 isAdmin = EMAILS_ADMIN.includes(user.email);
+                preencherTabelaArquivistica(); // Carrega a tabela no input escondido
                 carregar(); 
             }
         });
@@ -267,27 +526,28 @@
         }
 
         window.desarquivarGuia = async (id, num) => {
-            if(confirm(`Deseja DESARQUIVAR a Guia ${num}?\nEla sairá do Acervo e voltará para o status "Aberta".`)) {
+            if(confirm(`Deseja DESARQUIVAR a Guia ${num}?\nEla sairá do Acervo e voltará para o status "Aberta", permitindo adicionar ou remover processos.`)) {
                 try {
                     await updateDoc(doc(db, "guias", id), { status: "Aberta", locCaixaGuia: "", locCaixaProc: "", dataArquivamentoSistema: "" });
-                    alert("Guia Desarquivada!"); carregar();
+                    alert("Guia Desarquivada! Ela agora aparece na tela de 'Inserir Processos'.");
+                    carregar();
                 } catch(e) { alert("Erro ao desarquivar."); }
             }
         };
 
         window.excluirGuiaAcervo = async (id, num) => {
-            if(confirm(`🚨 PERIGO: Deseja EXCLUIR DEFINITIVAMENTE a Guia ${num} e TODOS os processos?`)) {
+            if(confirm(`🚨 PERIGO: Deseja EXCLUIR DEFINITIVAMENTE a Guia ${num} e TODOS os processos dentro dela?\nEsta ação não tem volta!`)) {
                 try {
                     const procs = await getDocs(collection(db, "guias", id, "processos"));
                     const promessas = procs.docs.map(p => deleteDoc(doc(db, "guias", id, "processos", p.id)));
                     await Promise.all(promessas);
                     await deleteDoc(doc(db, "guias", id));
-                    alert("Guia excluída!"); carregar();
+                    alert("Guia excluída do sistema!");
+                    carregar();
                 } catch(e) { alert("Erro ao excluir guia."); }
             }
         };
 
-        // Função principal dos Detalhes modificada para adicionar o botão "⚖️ Classificar"
         window.verDetalhes = async (id, num) => {
             const grid = document.getElementById("detalhesGuiaGrid");
             document.getElementById("modalTitulo").innerText = "Detalhes - Guia " + num;
@@ -310,8 +570,7 @@
                     <thead><tr style="background:var(--primary); color:white;">
                         <th style="padding:10px; border:1px solid var(--border);">Processo</th>
                         <th style="padding:10px; border:1px solid var(--border);">Interessado / Assunto</th>
-                        <th style="padding:10px; border:1px solid var(--border); text-align:center;">Imagens</th>
-                        <th style="padding:10px; border:1px solid var(--border);">Ação / Classificação</th>
+                        <th style="padding:10px; border:1px solid var(--border);">Ação / Tabela Temporalidade</th>
                     </tr></thead><tbody>`;
 
                 docsSnap.forEach(docItem => {
@@ -320,29 +579,32 @@
                     
                     let btnAcao = "";
                     if (p.metadadosArquivisticos) {
-                        btnAcao = `<span style="color: #27ae60; font-weight: bold;">✅ Classificado (${p.metadadosArquivisticos.codigoClassificacaoRef})</span>`;
+                        btnAcao = `<span style="color: #27ae60; font-weight: bold;">✅ Classificado (${p.metadadosArquivisticos.codigoClassificacaoRef})</span><br><small style="color:#555;">${p.metadadosArquivisticos.destinacaoFinal}</small>`;
                     } else {
-                        btnAcao = `<button onclick="window.abrirModalClassificacao('${id}', '${procId}', '${p.numeroProcessoFisico}', '${p.dataAbertura}')" style="background: #3498db; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;">⚖️ Classificar</button>`;
+                        btnAcao = `<button onclick="window.abrirModalClassificacao('${id}', '${procId}', '${p.numeroProcessoFisico}', '${p.dataAbertura}')" style="background: #3498db; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight:bold;">⚖️ Classificar (e-ARQ)</button>`;
                     }
 
                     html += `<tr>
                         <td style="padding:10px; border:1px solid var(--border);"><b>${p.numeroProcessoFisico}</b><br><small>${p.tipoProcessoSei}</small></td>
                         <td style="padding:10px; border:1px solid var(--border);">${p.interessado}<br><small>${p.assunto}</small></td>
-                        <td style="padding:10px; border:1px solid var(--border); text-align:center;"><b>${p.qtdImagensDigitalizadas || 0}</b> img</td>
-                        <td style="padding:10px; border:1px solid var(--border);">${btnAcao}</td>
+                        <td style="padding:10px; border:1px solid var(--border); text-align:center;">${btnAcao}</td>
                     </tr>`;
                 });
                 grid.innerHTML = html + "</tbody></table>";
             } catch (e) { grid.innerHTML = `<p style="color:red;">Erro ao carregar detalhes.</p>`; }
         };
 
-        // Lógica de Submissão da Classificação (Ponte)
+        // LÓGICA PARA SUBMISSÃO DA CLASSIFICAÇÃO ARQUIVÍSTICA
         window.abrirModalClassificacao = (guiaId, procId, numero, dataAbertura) => {
             document.getElementById("classifGuiaId").value = guiaId;
             document.getElementById("classifProcId").value = procId;
             document.getElementById("classifNumeroProc").innerText = numero;
             document.getElementById("classifDataAbertura").value = dataAbertura || new Date().toISOString().split('T')[0];
+            
+            // Força sempre o padrão estrito de identificação por garantia
             document.getElementById("classifFiliacao").value = "pais ingleses";
+            document.getElementById("classifCodigoBusca").value = ""; // Limpa a busca anterior
+            
             document.getElementById("modalClassificacao").style.display = "block";
         };
 
@@ -351,48 +613,56 @@
             const guiaId = document.getElementById("classifGuiaId").value;
             const procId = document.getElementById("classifProcId").value;
             const dataAb = document.getElementById("classifDataAbertura").value;
-            const select = document.getElementById("classifCodigo");
             const filiacao = document.getElementById("classifFiliacao").value;
+            const codigoDigitado = document.getElementById("classifCodigoBusca").value.trim();
             
-            const opcao = select.options[select.selectedIndex];
-            const codigo = select.value;
-            const anosTotal = parseInt(opcao.getAttribute("data-anos"));
-            const destinacao = opcao.getAttribute("data-dest");
+            // Valida se o que foi digitado consta na tabela oficial
+            const regraEncontrada = tabelaOficialDPRJ.find(r => r.cod === codigoDigitado);
+            
+            if (!regraEncontrada) {
+                alert("⚠️ Código inválido! Por favor, selecione um código oficial da lista.");
+                return;
+            }
 
+            // Calcula a data prevista de Destinação
             const dataBase = new Date(dataAb);
-            dataBase.setFullYear(dataBase.getFullYear() + anosTotal);
+            dataBase.setFullYear(dataBase.getFullYear() + regraEncontrada.anos);
             const dataPrevistaStr = dataBase.toISOString().split('T')[0];
 
             try {
                 await updateDoc(doc(db, "guias", guiaId, "processos", procId), {
                     filiacaoArquivistica: filiacao,
                     metadadosArquivisticos: {
-                        codigoClassificacaoRef: codigo,
-                        destinacaoFinal: destinacao,
+                        codigoClassificacaoRef: regraEncontrada.cod,
+                        assuntoTemporalidade: regraEncontrada.ass,
+                        destinacaoFinal: regraEncontrada.dest,
                         dataPrevistaDestinacaoFinal: dataPrevistaStr
                     }
                 });
                 
-                alert("Processo classificado com sucesso!");
+                alert("Processo classificado com sucesso de acordo com a norma!");
                 document.getElementById("modalClassificacao").style.display = "none";
-                const numProcVisor = document.getElementById("classifNumeroProc").innerText;
+                
+                // Recarrega os detalhes visualmente
+                const numProcVisor = document.getElementById("modalTitulo").innerText.replace("Detalhes - Guia ", "");
                 window.verDetalhes(guiaId, numProcVisor); 
                 
             } catch(err) {
                 console.error(err);
-                alert("Erro ao classificar.");
+                alert("Erro ao gravar classificação no banco de dados.");
             }
         };
 
-        // Funções do Dashboard
         window.abrirDashboard = async () => { 
             document.getElementById("modalDashboard").style.display = "block";
             if (estatisticasGlobais.length > 0) { window.atualizarGrafico(); return; }
             document.getElementById("loadingDashboard").style.display = "inline";
+            
             try {
                 const promessas = todasAsGuiasArquivadas.map(g => getDocs(collection(db, "guias", g.id, "processos")));
                 const resultados = await Promise.all(promessas);
                 estatisticasGlobais = [];
+                
                 resultados.forEach(docsSnap => { 
                     docsSnap.forEach(d => { 
                         const data = d.data(); 
@@ -420,6 +690,7 @@
             estatisticasGlobais.forEach(item => {
                 let chave = ""; const [ano, mes, dia] = item.dataOrig.split('-');
                 if (tipo === "diaria") { chave = item.dataOrig; } else if (tipo === "mensal") { chave = `${ano}-${mes}`; } else if (tipo === "semestral") { const semestre = parseInt(mes) <= 6 ? "S1" : "S2"; chave = `${ano}-${semestre}`; } else if (tipo === "anual") { chave = `${ano}`; }
+                
                 if (!agrupado[chave]) agrupado[chave] = { imagens: 0, dias: new Set(), procs: 0 };
                 agrupado[chave].imagens += item.imagens;
                 agrupado[chave].dias.add(item.dataOrig);
@@ -439,7 +710,17 @@
             chartProducao = new Chart(ctx, { 
                 type: 'bar', 
                 data: { labels: labels, datasets: [{ label: 'Imagens Digitalizadas', data: values, backgroundColor: '#27ae60', borderColor: '#006b33', borderWidth: 1, borderRadius: 4 }] }, 
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } } 
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    plugins: { tooltip: { callbacks: { label: function(context) {
+                        const index = context.dataIndex; const totalBarra = context.parsed.y; const qtdDias = diasPorBarra[index];
+                        const mediaPorDia = qtdDias > 0 ? (totalBarra / qtdDias).toFixed(1) : 0;
+                        let tooltipLines = [`Total: ${totalBarra} imagens`];
+                        if (tipo !== "diaria") { tooltipLines.push(`📅 Dias trabalhados: ${qtdDias}`, `📊 Média: ${String(mediaPorDia).replace('.', ',')} imagens/dia`); } 
+                        return tooltipLines;
+                    }}}}, 
+                    scales: { y: { beginAtZero: true, title: { display: true, text: 'Nº de Imagens' } } } 
+                } 
             });
         };
 
