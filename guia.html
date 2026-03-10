@@ -10,80 +10,49 @@
         <aside id="sidebar">
             <div class="sidebar-logo">CONTROLE DE DIGITALIZAÇÃO PROCESSOS NUDOF</div>
             <nav>
+                <div style="padding: 10px 15px; font-size: 0.8em; color: var(--secondary); font-weight: bold; text-transform: uppercase;">Fluxo Operacional</div>
                 <a href="index.html">🏠 Início / Histórico</a>
                 <a href="guia.html" class="ativo">➕ Nova Guia</a>
                 <a href="processos.html">📄 Inserir Processos</a>
                 <a href="digitalizacao.html">🖨️ Digitalização e SEI</a>
                 <a href="arquivamentoFisico.html">🗄️ Arquivar Físico</a>
                 <a href="acervo.html">📚 Consulta de Acervo</a>
-                <button id="btnLogout" class="btn-sair">🚪 Sair do Sistema</button>
+
+                <div style="padding: 10px 15px; font-size: 0.8em; color: var(--secondary); font-weight: bold; text-transform: uppercase; margin-top: 15px; border-top: 1px solid var(--border);">Gestão Arquivística (e-ARQ)</div>
+                <a href="arq_dashboard.html">📊 Painel Temporalidade</a>
+                <a href="arq_temporalidade.html">📋 Regras e Tabela</a>
+                <a href="arq_eliminacao.html">🔥 Lista de Eliminação</a>
+
+                <button id="btnLogout" class="btn-sair" style="margin-top: 20px;">🚪 Sair do Sistema</button>
             </nav>
         </aside>
-
         <main id="content">
             <h2 class="page-title">Registrar Nova Guia de Remessa</h2>
             <div class="form-container">
                 <div style="position: relative;">
                     <label>Nº Guia de Remessa:</label>
-                    <div id="balaoSugestao" style="display: none; position: absolute; top: -5px; left: 160px; background-color: #f39c12; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; box-shadow: 0 3px 6px rgba(0,0,0,0.3); cursor: pointer; z-index: 10;">
-                        💡 Sugestão: <span id="textoSugestao">...</span> (Clique para usar)
-                        <div style="position: absolute; bottom: -6px; left: 20px; width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 6px solid #f39c12;"></div>
-                    </div>
                     <input type="text" id="numeroGuia" placeholder="Ex: 0000" required autocomplete="off">
                 </div>
-                
                 <label>Unidade Solicitante:</label>
                 <input type="text" id="unidade" placeholder="Nome da Unidade" required>
-                
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div>
-                        <label>Data de Recebimento:</label>
-                        <input type="date" id="dataRecebimento" required>
-                    </div>
-                    <div>
-                        <label>Hora de Recebimento:</label>
-                        <input type="time" id="horaRecebimento" required>
-                    </div>
+                    <div><label>Data de Recebimento:</label><input type="date" id="dataRecebimento" required></div>
+                    <div><label>Hora de Recebimento:</label><input type="time" id="horaRecebimento" required></div>
                 </div>
                 <button class="btn-primary" id="btnSalvarGuia">Criar Guia</button>
             </div>
         </main>
     </div>
-
     <script type="module">
         import { db, auth } from "./firebase.js";
-        import { collection, addDoc, getDocs, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+        import { collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
-        let proximoNumSugerido = "";
-
-        async function buscarSugestaoNumero() {
-            try {
-                const q = query(collection(db, "guias"), orderBy("dataCriacao", "desc"), limit(1));
-                const snap = await getDocs(q);
-                if (!snap.empty) {
-                    const ultimaGuia = snap.docs[0].data();
-                    const ultimoNumStr = ultimaGuia.numero || "0";
-                    const match = ultimoNumStr.match(/^\d+/);
-                    if (match) {
-                        proximoNumSugerido = String(parseInt(match[0], 10) + 1).padStart(3, '0');
-                    } else { proximoNumSugerido = "001"; }
-                } else { proximoNumSugerido = "001"; }
-                document.getElementById("textoSugestao").innerText = proximoNumSugerido;
-            } catch (e) { proximoNumSugerido = "001"; }
-        }
-
-        onAuthStateChanged(auth, (user) => { if (!user) window.location.href = "index.html"; else buscarSugestaoNumero(); });
+        onAuthStateChanged(auth, (user) => { if (!user) window.location.href = "index.html"; });
         document.getElementById("btnLogout").onclick = () => signOut(auth);
 
-        const inputGuia = document.getElementById("numeroGuia");
-        const balaoSugestao = document.getElementById("balaoSugestao");
-        inputGuia.addEventListener("focus", () => { balaoSugestao.style.display = "block"; });
-        inputGuia.addEventListener("blur", () => { setTimeout(() => balaoSugestao.style.display = "none", 200); });
-        balaoSugestao.addEventListener("click", () => { inputGuia.value = proximoNumSugerido; });
-
         document.getElementById("btnSalvarGuia").onclick = async () => {
-            const numero = inputGuia.value.trim();
+            const numero = document.getElementById("numeroGuia").value.trim();
             const unidade = document.getElementById("unidade").value.trim();
             const data = document.getElementById("dataRecebimento").value;
             const hora = document.getElementById("horaRecebimento").value;
