@@ -16,6 +16,8 @@
         .badge-guarda { background: #e8f4fd; color: #2980b9; border: 1px solid #3498db; }
         
         .painel-informativo { background: #fff3e0; border-left: 5px solid #e67e22; padding: 15px; border-radius: 4px; margin-bottom: 20px; color: #d35400; font-size: 0.95em; }
+        
+        .msg-placeholder { text-align: center; padding: 40px; color: #7f8c8d; font-size: 1.1em; font-weight: bold; background: white; border-radius: 8px; border: 1px dashed var(--border); }
     </style>
 </head>
 <body>
@@ -45,12 +47,16 @@
             <h2 class="page-title">Dicionário da Tabela de Temporalidade Oficial</h2>
             
             <div class="painel-informativo">
-                <strong>ℹ️ Modo de Consulta Rápida:</strong> Este painel exibe a Tabela de Temporalidade de Documentos (Atividade-Meio) oficial da DPRJ. Utilize a barra de pesquisa abaixo para encontrar rapidamente o prazo legal de guarda de qualquer assunto ou código. Esta página é apenas para leitura e consulta.
+                <strong>ℹ️ Modo de Consulta Rápida:</strong> Este painel exibe a Tabela de Temporalidade de Documentos (Atividade-Meio) oficial da DPRJ. Utilize a barra de pesquisa abaixo para encontrar rapidamente o prazo legal de guarda de qualquer assunto ou código.
             </div>
 
             <input type="text" id="buscaRegra" class="input-busca" placeholder="🔍 Pesquisar por Código (ex: 0-2-4) ou Assunto (ex: Férias)..." oninput="window.filtrarTabela()">
             
-            <div style="max-height: 65vh; overflow-y: auto; border-radius: 8px; border: 1px solid var(--border);">
+            <div id="msgVazio" class="msg-placeholder">
+                ☝️ Digite um código ou assunto na barra acima para pesquisar.
+            </div>
+
+            <div id="areaTabela" style="display: none; max-height: 60vh; overflow-y: auto; border-radius: 8px; border: 1px solid var(--border);">
                 <table class="tabela-regras">
                     <thead>
                         <tr>
@@ -210,15 +216,33 @@
             { cod: "0-8-0", ass: "Associações Culturais e de Defensores", anos: 5, dest: "Guarda Permanente" }
         ];
 
-        // Função que renderiza a tabela na tela
-        function renderizarTabela(lista) {
+        // Função que renderiza a tabela ou a oculta dependendo do caso
+        function renderizarTabela(lista, buscaVazia = false) {
             const tbody = document.getElementById("corpoTabela");
-            tbody.innerHTML = "";
+            const areaTabela = document.getElementById("areaTabela");
+            const msgVazio = document.getElementById("msgVazio");
             
-            if (lista.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #e74c3c;">Nenhuma regra encontrada com esse termo.</td></tr>`;
+            tbody.innerHTML = "";
+
+            if (buscaVazia) {
+                areaTabela.style.display = "none";
+                msgVazio.style.display = "block";
+                msgVazio.innerHTML = "☝️ Digite um código ou assunto na barra acima para pesquisar.";
+                msgVazio.style.color = "#7f8c8d";
                 return;
             }
+
+            if (lista.length === 0) {
+                areaTabela.style.display = "none";
+                msgVazio.style.display = "block";
+                msgVazio.innerHTML = "❌ Nenhuma regra ou código encontrado com esse termo.";
+                msgVazio.style.color = "#e74c3c";
+                return;
+            }
+
+            // Exibe a tabela e oculta o aviso
+            areaTabela.style.display = "block";
+            msgVazio.style.display = "none";
 
             lista.forEach(regra => {
                 const badgeClass = regra.dest === "Eliminação" ? "badge-elim" : "badge-guarda";
@@ -234,24 +258,30 @@
             });
         }
 
-        // Função de Filtro Dinâmico (Busca)
+        // Função de Filtro Dinâmico
         window.filtrarTabela = () => {
             const termo = document.getElementById("buscaRegra").value.toLowerCase().trim();
+            
+            if (termo === "") {
+                // Se a barra estiver vazia, oculta a tabela
+                renderizarTabela([], true);
+                return;
+            }
             
             const filtrado = tabelaOficialDPRJ.filter(r => 
                 r.cod.toLowerCase().includes(termo) || 
                 r.ass.toLowerCase().includes(termo)
             );
             
-            renderizarTabela(filtrado);
+            renderizarTabela(filtrado, false);
         };
 
-        // Verifica Autenticação e Carrega a Tabela Inicial
+        // Verifica Autenticação e inicia com a tabela vazia/oculta
         onAuthStateChanged(auth, (user) => { 
             if (!user) {
                 window.location.href = "index.html"; 
             } else {
-                renderizarTabela(tabelaOficialDPRJ);
+                renderizarTabela([], true); // Inicia oculto
             }
         });
         
