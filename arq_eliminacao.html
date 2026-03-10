@@ -4,6 +4,22 @@
     <meta charset="UTF-8">
     <title>Lista de Eliminação - NUDOF</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .tabela-eliminacao { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-radius: 8px; overflow: hidden; }
+        .tabela-eliminacao th, .tabela-eliminacao td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
+        .tabela-eliminacao th { background: var(--primary); color: white; font-weight: bold; }
+        .tabela-eliminacao tr:hover { background: #f9f9f9; }
+        .painel-aviso { background: #fff3e0; border-left: 5px solid #e67e22; padding: 15px 20px; border-radius: 4px; margin-bottom: 25px; }
+        .acoes-topo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        
+        @media print {
+            #sidebar, .acoes-topo, button { display: none !important; }
+            body { background: white; }
+            #content { padding: 0; }
+            .tabela-eliminacao { box-shadow: none; border: 1px solid #ddd; }
+            .tabela-eliminacao th { background: #eee !important; color: #000 !important; }
+        }
+    </style>
 </head>
 <body>
     <div id="appInterface">
@@ -26,27 +42,118 @@
                 <button id="btnLogout" class="btn-sair" style="margin-top: 20px;">🚪 Sair do Sistema</button>
             </nav>
         </aside>
+        
         <main id="content">
             <h2 class="page-title">Relatório de Eliminação de Documentos Físicos</h2>
-            <div class="form-container" style="border-left: 5px solid #e74c3c;">
-                <p style="color: #c0392b; font-weight: bold;">Documentos cujo prazo da Tabela de Temporalidade expirou e devem ser descartados.</p>
+            
+            <div class="painel-aviso">
+                <p style="color: #d35400; font-weight: bold; margin: 0;">⚠️ Estes processos atingiram o prazo de guarda estipulado na Tabela de Temporalidade e estão aptos para fragmentação/destruição física. O cálculo é feito com base na Data de Abertura original do processo.</p>
+            </div>
+
+            <div class="acoes-topo">
+                <div>
+                    <strong>Total de Processos aptos para destruição:</strong> 
+                    <span id="totalVencidos" style="font-size: 1.2rem; font-weight: bold; color: #c0392b; margin-left: 5px;">...</span>
+                </div>
+                <button class="btn-primary" style="background:#34495e; width:auto;" onclick="window.print()">🖨️ Imprimir Termo de Eliminação</button>
             </div>
             
-            <table style="width: 100%; border-collapse: collapse; background: white;">
+            <table class="tabela-eliminacao">
                 <thead>
-                    <tr style="background: var(--primary); color: white;">
-                        <th style="padding: 12px; border: 1px solid #ddd;">Processo e Identificação</th>
-                        <th style="padding: 12px; border: 1px solid #ddd;">Vencimento e Regra</th>
+                    <tr>
+                        <th>Nº Processo Físico</th>
+                        <th>Interessado</th>
+                        <th>Regra de Classificação</th>
+                        <th>Data Abertura (Origem)</th>
+                        <th>Data de Expiração</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="listaVencidos">
                     <tr>
-                        <td style="padding: 12px; border: 1px solid #ddd;"><strong>E-00/12345/2018</strong><br>Filiação: pais ingleses</td>
-                        <td style="padding: 12px; border: 1px solid #ddd; color: #c0392b; font-weight: bold;">Venceu em: 15/02/2024<br>Regra: 040.1</td>
+                        <td colspan="5" style="text-align:center; padding: 20px;">A procurar processos no acervo do banco de dados...</td>
                     </tr>
                 </tbody>
             </table>
         </main>
     </div>
+
+    <script type="module">
+        import { db, auth } from "./firebase.js";
+        import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+
+        onAuthStateChanged(auth, (user) => { 
+            if (!user) window.location.href = "index.html"; 
+            else carregarListaEliminacao();
+        });
+        
+        document.getElementById("btnLogout").onclick = () => signOut(auth);
+
+        async function carregarListaEliminacao() {
+            const tbody = document.getElementById("listaVencidos");
+            try {
+                const guiasSnap = await getDocs(collection(db, "guias"));
+                
+                const dataHoje = new Date();
+                dataHoje.setHours(0, 0, 0, 0);
+
+                let html = "";
+                let contagem = 0;
+
+                for (const guiaDoc of guiasSnap.docs) {
+                    const numeroGuia = guiaDoc.data().numero || "S/N";
+                    const caixaProc = guiaDoc.data().locCaixaProc || "Sem Caixa";
+                    const processosSnap = await getDocs(collection(db, "guias", guiaDoc.id, "processos"));
+                    
+                    processosSnap.forEach(procDoc => {
+                        const p = procDoc.data();
+                        
+                        // Verifica se foi classificado e se a regra manda eliminar
+                        if (p.metadadosArquivisticos && p.metadadosArquivisticos.destinacaoFinal === "Eliminação") {
+                            
+                            const dataVencimento = new Date(p.metadadosArquivisticos.dataPrevistaDestinacaoFinal);
+                            dataVencimento.setHours(0, 0, 0, 0);
+
+                            // Se a data de hoje passou da data de vencimento prevista
+                            if (dataHoje >= dataVencimento) {
+                                contagem++;
+                                
+                                const dataAberturaBR = p.dataAbertura ? p.dataAbertura.split('-').reverse().join('/') : "--";
+                                const dataVencimentoBR = p.metadadosArquivisticos.dataPrevistaDestinacaoFinal.split('-').reverse().join('/');
+                                
+                                html += `
+                                    <tr>
+                                        <td>
+                                            <strong>${p.numeroProcessoFisico}</strong><br>
+                                            <small style="color:#666;">Guia: ${numeroGuia} | Caixa: ${caixaProc}</small>
+                                        </td>
+                                        <td>${p.interessado}</td>
+                                        <td>
+                                            <strong>${p.metadadosArquivisticos.codigoClassificacaoRef}</strong><br>
+                                            <small>${p.metadadosArquivisticos.assuntoTemporalidade || 'Sem assunto definido'}</small>
+                                        </td>
+                                        <td>${dataAberturaBR}</td>
+                                        <td style="color: #c0392b; font-weight: bold;">${dataVencimentoBR}</td>
+                                    </tr>
+                                `;
+                            }
+                        }
+                    });
+                }
+
+                document.getElementById("totalVencidos").innerText = contagem;
+
+                if (contagem === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 30px; color:#7f8c8d;">Não existem processos com o prazo de eliminação expirado até ao dia de hoje.</td></tr>`;
+                } else {
+                    tbody.innerHTML = html;
+                }
+
+            } catch (error) {
+                console.error("Erro ao carregar lista de eliminação:", error);
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">Erro ao aceder aos dados no sistema.</td></tr>`;
+            }
+        }
+    </script>
 </body>
 </html>
