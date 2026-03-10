@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Guarda Permanente - NUDOF</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .tabela-eliminacao { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-radius: 8px; overflow: hidden; }
+        .tabela-eliminacao th, .tabela-eliminacao td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; vertical-align: middle; }
+        .tabela-eliminacao th { background: #2980b9; color: white; font-weight: bold; }
+        .tabela-eliminacao tr:hover { background: #f9f9f9; }
+        .painel-aviso { background: #e8f4f8; border-left: 5px solid #3498db; padding: 15px 20px; border-radius: 4px; margin-bottom: 25px; }
+        .acoes-topo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        
+        .detalhes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid var(--border); margin-top: 15px; }
+        .detalhes-grid div { margin-bottom: 10px; }
+        .detalhes-grid span { display: block; font-size: 0.85em; color: #666; font-weight: bold; text-transform: uppercase; margin-bottom: 3px; }
+        .detalhes-grid strong { font-size: 1.1em; color: var(--text-dark); }
+        .destaque-azul { background: #e8f4fd; border-left: 4px solid #2980b9; padding: 15px; grid-column: span 2; margin-top: 10px; border-radius: 4px; }
+        
+        @media print {
+            #sidebar, .acoes-topo, button, .col-acoes { display: none !important; }
+            body { background: white; }
+            #content { padding: 0; }
+            .tabela-eliminacao { box-shadow: none; border: 1px solid #ddd; }
+            .tabela-eliminacao th { background: #eee !important; color: #000 !important; }
+            th:nth-child(6), td:nth-child(6) { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <div id="appInterface">
+        <aside id="sidebar">
+            <div class="sidebar-logo">CONTROLE DE DIGITALIZAÇÃO PROCESSOS NUDOF</div>
+            <nav>
+                <div style="padding: 10px 15px; font-size: 0.8em; color: var(--secondary); font-weight: bold; text-transform: uppercase;">Fluxo Operacional</div>
+                <a href="index.html">🏠 Início / Histórico</a>
+                <a href="guia.html">➕ Nova Guia</a>
+                <a href="processos.html">📄 Inserir Processos</a>
+                <a href="digitalizacao.html">🖨️ Digitalização e SEI</a>
+                <a href="arquivamentoFisico.html">🗄️ Arquivar Físico</a>
+                <a href="acervo.html">📚 Consulta de Acervo</a>
+            
+                <div style="padding: 10px 15px; font-size: 0.8em; color: var(--secondary); font-weight: bold; text-transform: uppercase; margin-top: 15px; border-top: 1px solid var(--border);">Gestão Arquivística (e-ARQ)</div>
+                <a href="arq_dashboard.html">📊 Painel Temporalidade</a>
+                <a href="arq_temporalidade.html">📋 Regras e Tabela</a>
+                <a href="arq_eliminacao.html">🔥 Lista de Eliminação</a>
+                <a href="arq_guarda_permanente.html" class="ativo">🏛️ Guarda Permanente</a>
+            
+                <button id="btnLogout" class="btn-sair" style="margin-top: 20px;">🚪 Sair do Sistema</button>
+            </nav>
+        </aside>
+        
+        <main id="content">
+            <h2 class="page-title" style="color: #2980b9; border-bottom-color: #2980b9;">Relatório de Recolhimento - Guarda Permanente</h2>
+            
+            <div class="painel-aviso">
+                <p style="color: #2980b9; font-weight: bold; margin: 0;">ℹ️ Estes processos cumpriram o prazo de retenção na fase corrente/intermediária. Conforme a Tabela de Temporalidade, eles possuem valor histórico e DEVEM SER PRESERVADOS. Estão aptos para transferência ao Arquivo Central/Histórico.</p>
+            </div>
+
+            <div class="acoes-topo">
+                <div>
+                    <strong>Total aptos para recolhimento histórico:</strong> 
+                    <span id="totalVencidos" style="font-size: 1.2rem; font-weight: bold; color: #2980b9; margin-left: 5px;">...</span>
+                </div>
+                <button class="btn-primary" style="background:#2c3e50; width:auto;" onclick="window.print()">🖨️ Imprimir Termo de Recolhimento</button>
+            </div>
+            
+            <table class="tabela-eliminacao">
+                <thead>
+                    <tr>
+                        <th>Nº Processo Físico</th>
+                        <th>Interessado</th>
+                        <th>Regra de Classificação</th>
+                        <th>Data Abertura</th>
+                        <th>Data P/ Transferência</th>
+                        <th class="col-acoes" style="text-align: center;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="listaVencidos">
+                    <tr>
+                        <td colspan="6" style="text-align:center; padding: 20px;">A procurar processos históricos no acervo...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </main>
+    </div>
+
+    <div id="modalDetalhesProcesso" class="modal">
+        <div class="modal-content" style="width: 95%; max-width: 800px;">
+            <span class="close-btn" onclick="document.getElementById('modalDetalhesProcesso').style.display='none'" style="float: right; cursor: pointer; font-size: 1.5em;">&times;</span>
+            <h3 style="color: #2980b9; margin-bottom: 5px;">👁️ Detalhes do Processo Histórico</h3>
+            <p style="color: #666; margin-top: 0; margin-bottom: 20px;">Informações para geração de Termo de Transferência.</p>
+            
+            <div class="detalhes-grid">
+                <div><span>Nº Processo Físico</span><strong id="detNumProcesso" style="color: #2980b9; font-size: 1.3em;">--</strong></div>
+                <div><span>Tipo de Processo (SEI)</span><strong id="detTipoSei">--</strong></div>
+                
+                <div style="grid-column: span 2;"><span>Interessado</span><strong id="detInteressado">--</strong></div>
+                <div style="grid-column: span 2;"><span>Assunto (Capa)</span><strong id="detAssunto">--</strong></div>
+                
+                <div><span>Localização: Guia</span><strong id="detGuia">--</strong></div>
+                <div><span>Localização: Caixa Física</span><strong id="detCaixaProc">--</strong></div>
+                
+                <div><span>Qtd. Folhas Físicas</span><strong id="detFolhas">--</strong></div>
+                <div><span>Imagens Digitalizadas</span><strong id="detImagens">--</strong></div>
+                
+                <div class="destaque-azul">
+                    <span style="color: #2980b9;">📋 Enquadramento Arquivístico (e-ARQ)</span>
+                    <strong id="detRegra" style="display: block; margin-bottom: 10px;">--</strong>
+                    
+                    <div style="display: flex; gap: 30px;">
+                        <div><span style="color: #2980b9;">Data Original do Processo:</span><strong id="detDataAb">--</strong></div>
+                        <div><span style="color: #2980b9;">Apto p/ Transferência desde:</span><strong id="detDataVenc">--</strong></div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn-primary" style="margin-top: 20px; background: #7f8c8d;" onclick="document.getElementById('modalDetalhesProcesso').style.display='none'">Fechar Detalhes</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db, auth } from "./firebase.js";
+        import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+
+        window.processosVencidosMap = {};
+
+        onAuthStateChanged(auth, (user) => { 
+            if (!user) window.location.href = "index.html"; 
+            else carregarLista();
+        });
+        document.getElementById("btnLogout").onclick = () => signOut(auth);
+
+        async function carregarLista() {
+            const tbody = document.getElementById("listaVencidos");
+            try {
+                const guiasSnap = await getDocs(collection(db, "guias"));
+                const dataHoje = new Date(); dataHoje.setHours(0, 0, 0, 0);
+
+                let html = ""; let contagem = 0; window.processosVencidosMap = {};
+
+                for (const guiaDoc of guiasSnap.docs) {
+                    const guiaData = guiaDoc.data();
+                    const numeroGuia = guiaData.numero || "S/N";
+                    const caixaProc = guiaData.locCaixaProc || "Sem Caixa";
+                    
+                    const processosSnap = await getDocs(collection(db, "guias", guiaDoc.id, "processos"));
+                    
+                    processosSnap.forEach(procDoc => {
+                        const p = procDoc.data();
+                        const procId = procDoc.id;
+                        
+                        // O FILTRO É AQUI: Apenas Guarda Permanente
+                        if (p.metadadosArquivisticos && p.metadadosArquivisticos.destinacaoFinal === "Guarda Permanente") {
+                            
+                            const dataVencimento = new Date(p.metadadosArquivisticos.dataPrevistaDestinacaoFinal);
+                            dataVencimento.setHours(0, 0, 0, 0);
+
+                            if (dataHoje >= dataVencimento) {
+                                contagem++;
+                                window.processosVencidosMap[procId] = { processo: p, guia: guiaData };
+                                
+                                const dataAberturaBR = p.dataAbertura ? p.dataAbertura.split('-').reverse().join('/') : "--";
+                                const dataVencimentoBR = p.metadadosArquivisticos.dataPrevistaDestinacaoFinal.split('-').reverse().join('/');
+                                
+                                html += `
+                                    <tr>
+                                        <td><strong>${p.numeroProcessoFisico}</strong><br><small style="color:#666;">Guia: ${numeroGuia} | Cx: ${caixaProc}</small></td>
+                                        <td>${p.interessado}</td>
+                                        <td><strong>${p.metadadosArquivisticos.codigoClassificacaoRef}</strong><br><small>${p.metadadosArquivisticos.assuntoTemporalidade || ''}</small></td>
+                                        <td>${dataAberturaBR}</td>
+                                        <td style="color: #2980b9; font-weight: bold;">${dataVencimentoBR}</td>
+                                        <td class="col-acoes" style="text-align: center;">
+                                            <button class="btn-primary" style="background: #3498db; padding: 8px 15px; width: auto; font-size: 0.9em;" onclick="window.abrirDetalhesProcesso('${procId}')">👁️ Detalhes</button>
+                                        </td>
+                                    </tr>`;
+                            }
+                        }
+                    });
+                }
+                document.getElementById("totalVencidos").innerText = contagem;
+                tbody.innerHTML = contagem === 0 ? `<tr><td colspan="6" style="text-align:center; padding: 30px; color:#7f8c8d;">Nenhum processo aguardando recolhimento histórico.</td></tr>` : html;
+
+            } catch (error) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">Erro ao aceder aos dados no sistema.</td></tr>`;
+            }
+        }
+
+        window.abrirDetalhesProcesso = function(procId) {
+            const dados = window.processosVencidosMap[procId];
+            if (!dados) return;
+            const p = dados.processo; const g = dados.guia;
+
+            document.getElementById("detNumProcesso").innerText = p.numeroProcessoFisico || "--";
+            document.getElementById("detTipoSei").innerText = p.tipoProcessoSei || "--";
+            document.getElementById("detInteressado").innerText = p.interessado || "--";
+            document.getElementById("detAssunto").innerText = p.assunto || "--";
+            document.getElementById("detGuia").innerText = g.numero || "--";
+            document.getElementById("detCaixaProc").innerText = g.locCaixaProc || "Sem Caixa Registrada";
+            document.getElementById("detFolhas").innerText = p.qtdFolhas || "--";
+            document.getElementById("detImagens").innerText = p.qtdImagensDigitalizadas ? p.qtdImagensDigitalizadas + " imgs" : "Não informado";
+            document.getElementById("detRegra").innerText = p.metadadosArquivisticos.codigoClassificacaoRef + " - " + (p.metadadosArquivisticos.assuntoTemporalidade || "");
+            document.getElementById("detDataAb").innerText = p.dataAbertura ? p.dataAbertura.split('-').reverse().join('/') : "--";
+            document.getElementById("detDataVenc").innerText = p.metadadosArquivisticos.dataPrevistaDestinacaoFinal ? p.metadadosArquivisticos.dataPrevistaDestinacaoFinal.split('-').reverse().join('/') : "--";
+            
+            document.getElementById("modalDetalhesProcesso").style.display = "block";
+        };
+    </script>
+</body>
+</html>
