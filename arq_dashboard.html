@@ -6,8 +6,9 @@
     <link rel="stylesheet" href="style.css">
     <style>
         .dash-card { background:#fff; padding:25px; border-radius:8px; text-align:center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .dash-card h3 { margin-top: 0; color: #555; font-size: 1.1em; }
-        .dash-card h1 { margin: 10px 0 0 0; font-size: 3em; }
+        .dash-card h1 { font-size: 3em; margin: 10px 0; }
+        .grid-dash { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 20px; }
+        @media (max-width: 1200px) { .grid-dash { grid-template-columns: repeat(2, 1fr); } }
     </style>
 </head>
 <body>
@@ -22,41 +23,45 @@
                 <a href="digitalizacao.html">🖨️ Digitalização e SEI</a>
                 <a href="arquivamentoFisico.html">🗄️ Arquivar Físico</a>
                 <a href="acervo.html">📚 Consulta de Acervo</a>
-            
+                
                 <div style="padding: 10px 15px; font-size: 0.8em; color: var(--secondary); font-weight: bold; text-transform: uppercase; margin-top: 15px; border-top: 1px solid var(--border);">Gestão Arquivística (e-ARQ)</div>
                 <a href="arq_dashboard.html" class="ativo">📊 Painel Temporalidade</a>
                 <a href="arq_temporalidade.html">📋 Regras e Tabela</a>
                 <a href="arq_eliminacao.html">🔥 Lista de Eliminação</a>
-            
+                <a href="arq_guarda_permanente.html">🏛️ Guarda Permanente</a>
+                
                 <button id="btnLogout" class="btn-sair" style="margin-top: 20px;">🚪 Sair do Sistema</button>
             </nav>
         </aside>
-
+        
         <main id="content">
             <h2 class="page-title">Monitoramento do Ciclo de Vida Documental</h2>
+            <p id="loader" style="color: var(--secondary); font-weight: bold;">🔄 A analisar todo o acervo no banco de dados. Aguarde...</p>
             
-            <p id="statusCarregamento" style="color: var(--secondary); font-weight: bold;">🔄 A analisar todo o acervo no banco de dados. Aguarde...</p>
-
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 20px;">
-                
+            <div class="grid-dash">
                 <div class="dash-card" style="border-top:4px solid var(--primary);">
-                    <h3>No Prazo de Guarda Legal</h3>
+                    <h3 style="color: #555; margin:0;">No Prazo de Guarda</h3>
                     <h1 id="countNoPrazo" style="color:var(--primary);">...</h1>
-                    <small style="color: #666;">Processos classificados e guardados</small>
+                    <small style="color: #666;">Fase Corrente/Intermediária</small>
                 </div>
                 
-                <div class="dash-card" style="border-top:4px solid #e74c3c;">
-                    <h3>Prontos para Destinação Final</h3>
-                    <h1 id="countVencidos" style="color:#e74c3c;">...</h1>
-                    <small style="color: #666;">Prazo expirado (Eliminação/Guarda Histórica)</small>
-                </div>
-
                 <div class="dash-card" style="border-top:4px solid #f39c12;">
-                    <h3>Aguardando Classificação</h3>
+                    <h3 style="color: #555; margin:0;">Sem Classificação</h3>
                     <h1 id="countPendentes" style="color:#f39c12;">...</h1>
-                    <small style="color: #666;">Sem regra temporal atribuída no Acervo</small>
+                    <small style="color: #666;">Aguardando e-ARQ no Acervo</small>
                 </div>
 
+                <div class="dash-card" style="border-top:4px solid #e74c3c;">
+                    <h3 style="color: #555; margin:0;">Aptos p/ Eliminação</h3>
+                    <h1 id="countEliminacao" style="color:#e74c3c;">...</h1>
+                    <small style="color: #666;">Prazo expirado (Fragmentação)</small>
+                </div>
+
+                <div class="dash-card" style="border-top:4px solid #2980b9;">
+                    <h3 style="color: #555; margin:0;">Guarda Histórica</h3>
+                    <h1 id="countGuarda" style="color:#2980b9;">...</h1>
+                    <small style="color: #666;">Prazo expirado (Transferência)</small>
+                </div>
             </div>
         </main>
     </div>
@@ -66,70 +71,57 @@
         import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
-        onAuthStateChanged(auth, (user) => { 
-            if (!user) {
-                window.location.href = "index.html"; 
-            } else {
-                carregarEstatisticasArquivisticas();
-            }
-        });
+        onAuthStateChanged(auth, (u) => { if (u) carregar(); else window.location.href="index.html"; });
 
-        document.getElementById("btnLogout").onclick = () => signOut(auth);
+        async function carregar() {
+            let prazo = 0, pendente = 0, eliminacao = 0, guarda = 0;
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
 
-        async function carregarEstatisticasArquivisticas() {
             try {
-                // Pega todas as guias do banco
-                const guiasSnap = await getDocs(collection(db, "guias"));
+                const gSnap = await getDocs(collection(db, "guias"));
                 
-                let totalNoPrazo = 0;
-                let totalVencidos = 0;
-                let totalPendentes = 0;
-                
-                const dataHoje = new Date();
-                dataHoje.setHours(0, 0, 0, 0); // Zera as horas para comparar só o dia
-
-                // Percorre cada guia para ler os processos dentro dela
-                for (const guiaDoc of guiasSnap.docs) {
-                    const processosSnap = await getDocs(collection(db, "guias", guiaDoc.id, "processos"));
+                for (const g of gSnap.docs) {
+                    const pSnap = await getDocs(collection(db, "guias", g.id, "processos"));
                     
-                    processosSnap.forEach(procDoc => {
-                        const p = procDoc.data();
+                    pSnap.forEach(pd => {
+                        const p = pd.data();
                         
-                        // Verifica se o processo já recebeu a classificação arquivística
                         if (p.metadadosArquivisticos && p.metadadosArquivisticos.dataPrevistaDestinacaoFinal) {
-                            
-                            // Cria um objeto de data com a data de vencimento prevista
-                            const dataVencimento = new Date(p.metadadosArquivisticos.dataPrevistaDestinacaoFinal);
-                            dataVencimento.setHours(0, 0, 0, 0);
-                            
-                            // Se a data de hoje for maior ou igual à data de vencimento, ele expirou
-                            if (dataHoje >= dataVencimento) {
-                                totalVencidos++;
-                            } else {
-                                // Se não expirou, está no prazo de guarda corrente/intermediário
-                                totalNoPrazo++;
-                            }
+                            const dv = new Date(p.metadadosArquivisticos.dataPrevistaDestinacaoFinal);
+                            dv.setHours(0, 0, 0, 0);
 
+                            if (hoje >= dv) {
+                                // Prazo venceu! Separa pelo tipo de destinação
+                                if (p.metadadosArquivisticos.destinacaoFinal === "Eliminação") {
+                                    eliminacao++;
+                                } else {
+                                    guarda++;
+                                }
+                            } else {
+                                // Ainda está no prazo legal
+                                prazo++;
+                            }
                         } else {
-                            // Se não tem metadadosArquivisticos, ele está pendente de classificação
-                            totalPendentes++;
+                            // Não foi classificado no acervo
+                            pendente++;
                         }
                     });
                 }
-
-                // Atualiza a tela com os resultados
-                document.getElementById("countNoPrazo").innerText = totalNoPrazo;
-                document.getElementById("countVencidos").innerText = totalVencidos;
-                document.getElementById("countPendentes").innerText = totalPendentes;
                 
-                document.getElementById("statusCarregamento").style.display = "none";
-
+                document.getElementById("countNoPrazo").innerText = prazo;
+                document.getElementById("countPendentes").innerText = pendente;
+                document.getElementById("countEliminacao").innerText = eliminacao;
+                document.getElementById("countGuarda").innerText = guarda;
+                document.getElementById("loader").style.display = "none";
+                
             } catch (error) {
-                console.error("Erro ao calcular dados arquivísticos: ", error);
-                document.getElementById("statusCarregamento").innerText = "⚠️ Erro ao carregar os dados. Verifique o console.";
-                document.getElementById("statusCarregamento").style.color = "red";
+                document.getElementById("loader").innerText = "Erro ao carregar dados.";
+                document.getElementById("loader").style.color = "red";
             }
         }
+        
+        document.getElementById("btnLogout").onclick = () => signOut(auth);
     </script>
 </body>
 </html>
