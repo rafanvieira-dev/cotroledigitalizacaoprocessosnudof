@@ -29,6 +29,13 @@
                 <a href="arq_eliminacao.html">🔥 Lista de Eliminação</a>
                 <a href="arq_guarda_permanente.html">🏛️ Guarda Permanente</a>
 
+                <div id="lgpdToggleContainer" class="lgpd-toggle-container" style="display: none;">
+                    <span id="lgpdLabelTexto" class="lgpd-label">🙈 Ocultar (LGPD)</span>
+                    <label class="switch">
+                        <input type="checkbox" id="btnToggleLgpd">
+                        <span class="slider"></span>
+                    </label>
+                </div>
                 <button id="btnLogout" class="btn-sair" style="margin-top: 20px;">🚪 Sair do Sistema</button>
             </nav>
         </aside>
@@ -103,6 +110,46 @@
         let guiaAtivaId = "";
         let processoEditandoId = null;
 
+        function inicializarModoLGPD(user) {
+            const toggleContainer = document.getElementById("lgpdToggleContainer");
+            const checkboxLgpd = document.getElementById("btnToggleLgpd");
+            const labelLgpd = document.getElementById("lgpdLabelTexto");
+            
+            if (!toggleContainer || !checkboxLgpd || !user) return;
+
+            if (EMAILS_ADMIN.includes(user.email)) {
+                toggleContainer.style.display = "flex";
+                const isLgpdActive = localStorage.getItem("lgpdMode") === "true";
+                
+                const atualizarVisualBotao = (ativo) => {
+                    checkboxLgpd.checked = ativo;
+                    if (ativo) {
+                        document.body.classList.add("modo-lgpd");
+                        labelLgpd.innerHTML = "👁️ Revelar (LGPD)";
+                        labelLgpd.style.color = "#27ae60";
+                    } else {
+                        document.body.classList.remove("modo-lgpd");
+                        labelLgpd.innerHTML = "🙈 Ocultar (LGPD)";
+                        labelLgpd.style.color = "var(--primary)";
+                    }
+                };
+
+                atualizarVisualBotao(isLgpdActive);
+
+                const novoCheckbox = checkboxLgpd.cloneNode(true);
+                checkboxLgpd.parentNode.replaceChild(novoCheckbox, checkboxLgpd);
+
+                novoCheckbox.addEventListener("change", (e) => {
+                    const isNowActive = e.target.checked;
+                    localStorage.setItem("lgpdMode", isNowActive);
+                    atualizarVisualBotao(isNowActive);
+                });
+            } else {
+                toggleContainer.style.display = "none";
+                document.body.classList.remove("modo-lgpd");
+            }
+        }
+
         const TIPOS_SEI_BASE = [
             "ADMINISTRAÇÃO GERAL: AÇÃO RESCISÓRIA", "ADMINISTRAÇÃO GERAL: COMUNICAÇÃO DE VIOLAÇÃO DE PRERROGATIVA", "ADMINISTRAÇÃO GERAL: CONVITES", "ADMINISTRAÇÃO GERAL: NORMATIZAÇÃO INTERNA", "ADMINISTRAÇÃO GERAL: PLANO DE ATUAÇÃO", "ADMINISTRAÇÃO GERAL: REESTRUTURAÇÃO - DESMEMBRAMENTO, CRIAÇÃO E EXTINÇÃO DE ÓRGÃOS DE ATUAÇÃO", "ADMINISTRAÇÃO GERAL: SOLICITAÇÃO/PRESTAÇÃO DE INFORMAÇÕES", "ASSESSORIA DE ASSUNTOS INSTITUCIONAIS: CONSULTA", "CEJUR: AUXÍLIO LIVRO", "CEJUR: EDITAIS PARA PARTICIPAÇÃO DEFENSORES E SERVIDORES EM CONGRESSOS, CURSOS E SEMINÁRIOS", "CEJUR: GRUPO DE ESTUDOS E PESQUISAS", "CEJUR: HONORÁRIOS - ESTORNO", "CEJUR: HONORÁRIOS - EXECUÇÃO", "CEJUR: HONORÁRIOS - PARCELAMENTO", "COMUNICAÇÃO: SOLICITAÇÕES", "CONSELHO SUPERIOR: AFASTAMENTO DE TITULARIDADE", "CONSELHO SUPERIOR: AVALIAÇÃO DE ESTÁGIO PROBATÓRIO", "CONSELHO SUPERIOR: DELIBERAÇÃO", "CONSELHO SUPERIOR: LISTA DE ANTIGUIDADE", "CONSELHO SUPERIOR: LISTA TRÍPLICE PARA NOMEAÇÃO DO OUVIDOR", "CONSELHO SUPERIOR: PRONUNCIAMENTO, RECOMENDAÇÃO, REPRESENTAÇÃO E REQUISIÇÃO", "CONTABILIDADE: PRESTAÇÃO DE CONTAS", "CONTROLE INTERNO: PLANO DE AUDITORIA", "CONTROLE INTERNO: PRESTAÇÃO DE CONTAS DE ADIANTAMENTO", "CONTROLE INTERNO: TOMADA DE CONTAS", "CONVÊNIOS/AJUSTES: ACORDO DE COOPERAÇÃO", "COORDENAÇÃO DE DEFESA CRIMINAL: CONSULTA", "COORDENAÇÃO DE ESTÁGIO: SINDICÂNCIA", "CORREGEDORIA: AUSÊNCIA A CONVOCAÇÕES, PLANTÕES E A ÓRGÃOS DE ATUAÇÃO", "CORREGEDORIA: PETICIONAMENTO INTEGRADO", "CORREGEDORIA: PROCESSO ADMINISTRATIVO DISCIPLINAR", "CORREGEDORIA: RECLAMAÇÃO/ELOGIO/SUGESTÃO", "CORREGEDORIA: REVISÃO CRIMINAL", "CORREGEDORIA: SINDICÂNCIA", "CORREGEDORIA: SUSPEIÇÃO E IMPEDIMENTO", "DEMANDA EXTERNA: OUTRAS ENTIDADES PRIVADAS", "DEMANDA EXTERNA: OUTROS ÓRGÃOS PÚBLICOS", "GABINETE: AFASTAMENTOS DE DEFENSORES PÚBLICOS", "GABINETE: CONFLITO DE ATRIBUIÇÕES", "GABINETE: RESOLUÇÃO 1131/2022 - CASOS DE DENEGAÇÃO DA ASSISTÊNCIA JURÍDICA", "GESTÃO DA INFORMAÇÃO: CADASTRO DE USUÁRIO EXTERNO NO SEI", "GESTÃO DA INFORMAÇÃO: CADASTRO DE USUÁRIO INTERNO NO SEI", "GESTÃO DE CONTRATO: PROCESSO DE PAGAMENTO", "GESTÃO DE IMÓVEIS: CESSÃO", "GESTÃO DE IMÓVEIS: LOCAÇÃO", "GESTÃO DOCUMENTAL: ACESSO À INFORMAÇÃO", "INFRAESTRUTURA: APOIO DE ENGENHARIA CIVIL", "INFRAESTRUTURA: PROJETOS DE ARQUITETURA", "LICITAÇÃO: ACOMPANHAMENTO DE FISCALIZAÇÃO DE CONTRATOS", "LICITAÇÃO: ADESÃO A ATA DE RP-NÃO PARTICIPANTE", "LICITAÇÃO: APLICAÇÃO DE SANÇÃO DECORRENTE DE CONTRATAÇÃO", "LICITAÇÃO: DISPENSA ESPECIAL", "LICITAÇÃO: INEXIGIBILIDADE", "LICITAÇÃO: PLANO DE AQUISIÇÕES", "LICITAÇÃO: PREGÃO ELETRÔNICO", "LICITAÇÃO: PREGÃO ELETRÔNICO-REGISTRO DE PREÇO", "LICITAÇÃO: PRESTAÇÃO DE SERVIÇOS", "LICITAÇÃO: TERMO DE AJUSTE DE CONTAS", "MATERIAL: DESFAZIMENTO DE MATERIAL DE CONSUMO", "MATERIAL: DESFAZIMENTO DE MATERIAL PERMANENTE", "MATERIAL: MOVIMENTAÇÃO DE MATERIAL PERMANENTE", "ORÇAMENTO E FINANÇAS: ADIANTAMENTO", "ORÇAMENTO E FINANÇAS: DIÁRIA DE DESLOCAMENTO DE SERVIDOR", "ORÇAMENTO E FINANÇAS: ESTIMATIVA DE RECEITA", "ORÇAMENTO E FINANÇAS: LIQUIDAÇÃO DE DESPESAS", "ORÇAMENTO E FINANÇAS: PAGAMENTO DE CONVÊNIO", "ORÇAMENTO E FINANÇAS: RECONHECIMENTO DE DÍVIDA", "ORGANIZAÇÃO E FUNCIONAMENTO: ELEIÇÃO DE CONSELHEIRO CLASSISTA", "ORGANIZAÇÃO E FUNCIONAMENTO: INFORMAÇÕES SOBRE O ÓRGÃO", "PAGAMENTO: DESCONTOS PREVIDENCIÁRIOS - RPPS", "PAGAMENTO: RECONHECIMENTO DE DÍVIDA COM DEFENSOR/SERVIDOR (FATO GERADOR HÁ MAIS DE 2 ANOS)", "PATRIMÔNIO: GESTÃO DE ACERVO BIBLIOGRÁFICO", "PESSOAL: ADIAMENTO DE POSSE EM CONCURSO DE SERVIDOR", "PESSOAL: ADICIONAL DE QUALIFICAÇÃO DO(A) SERVIDOR(A)", "PESSOAL: AFASTAMENTO PARA CONCORRER A MANDATO ELETIVO", "PESSOAL: AFASTAMENTO PARA CURSO DE FORMAÇÃO", "PESSOAL: AFASTAMENTO PARA EXERCER MANDATO ELETIVO", "PESSOAL: AFASTAMENTO PARA SERVIÇO ELEITORAL (TRE)", "PESSOAL: AFASTAMENTO PARA SERVIR EM ORGANISMO INTERNACIONAL", "PESSOAL: APOSENTADORIA - CONCESSÃO", "PESSOAL: APOSENTADORIA - PENSÃO VITALÍCIA", "PESSOAL: APOSENTADORIA - REVISÃO", "PESSOAL: APRESENTAÇÃO DE CERTIFICADO DE CURSO", "PESSOAL: ASSENTAMENTO FUNCIONAL DO DEFENSOR", "PESSOAL: ASSENTAMENTO FUNCIONAL DO SERVIDOR", "PESSOAL: ATUALIZAÇÃO DE PENSÃO", "PESSOAL: AUSÊNCIA EM RAZÃO DE CASAMENTO", "PESSOAL: AUSÊNCIA POR FALECIMENTO DE FAMILIAR", "PESSOAL: AUXÍLIO SAÚDE DE DEFENSOR PÚBLICO", "PESSOAL: AUXÍLIO SAÚDE DE SERVIDOR", "PESSOAL: AUXÍLIO TRANSPORTE - DEFENSOR", "PESSOAL: AVALIAÇÃO DE DESEMPENHO INDIVIDUAL", "PESSOAL: AVALIAÇÃO DE ESTÁGIO PROBATÓRIO DE SERVIDOR", "PESSOAL: AVERBAÇÃO DE TEMPO DE SERVIÇO", "PESSOAL: CADASTRAMENTO DE CONSIGNATÁRIAS", "PESSOAL: CAPACITAÇÃO PARA A SERVIDORA E PARA O SERVIDOR PROMOVIDA POR OUTRA INSTITUIÇÃO", "PESSOAL: CESSÃO DE DEFENSOR PARA OUTRO ÓRGÃO", "PESSOAL: CESSÃO DE SERVIDOR PARA OUTRO ÓRGÃO", "PESSOAL: CONCESSÃO E FRUIÇÃO DE LICENÇA ESPECIAL DE DEFENSOR", "PESSOAL: CONCESSÃO E FRUIÇÃO DE LICENÇA ESPECIAL DE SERVIDOR", "PESSOAL: CONCESSÃO E REVISÃO DE ABONO PERMANÊNCIA E BENEFÍCIO DE PERMANÊNCIA", "PESSOAL: CONCURSO DE LOTAÇÃO", "PESSOAL: CONCURSO DE REMOÇÃO", "PESSOAL: CONCURSO PÚBLICO - ORGANIZAÇÃO", "PESSOAL: CONCURSO PÚBLICO DE DEFENSOR - ORGANIZAÇÃO", "PESSOAL: CONTROLE DE FREQUÊNCIA", "PESSOAL: CURSO NO EXTERIOR - SEM ÔNUS", "PESSOAL: DESCONTO DE PENSÃO ALIMENTÍCIA", "PESSOAL: DEVOLUÇÃO/EXONERAÇÃO DE SERVIDOR CEDIDO", "PESSOAL: EMISSÃO DE CERTIDÃO DE TEMPO DE SERVIÇO DE EX-SERVIDOR PARA O ESTADO DO RIO DE JANEIRO", "PESSOAL: EMISSÃO DE CERTIDÃO DE TEMPO DE SERVIÇO DE EX-SERVIDOR PARA OUTROS ENTES FEDERATIVOS", "PESSOAL: EMISSÃO DE CERTIDÕES E DECLARAÇÕES", "PESSOAL: EXONERAÇÃO DE CARGO COMISSIONADO", "PESSOAL: EXONERAÇÃO DE CARGO EFETIVO", "PESSOAL: FALECIMENTO DE SERVIDOR/DEFENSOR", "PESSOAL: FÉRIAS DE DEFENSOR", "PESSOAL: FÉRIAS DE SERVIDOR(A)", "PESSOAL: FOLHA DE PAGAMENTO", "PESSOAL: GRATIFICAÇÃO - CONCESSÃO/ MAJORAÇÃO/ REDUÇÃO", "PESSOAL: GRATIFICAÇÃO POR ENCARGO - CURSO/CONCURSO", "PESSOAL: INCORPORAÇÃO DE CARGO EM COMISSÃO", "PESSOAL: ISENÇÃO DE IMPOSTO DE RENDA", "PESSOAL: LICENÇA AMAMENTAÇÃO", "PESSOAL: LICENÇA PARA TRATAMENTO DA PRÓPRIA SAÚDE", "PESSOAL: LICENÇA PARA TRATAR DE INTERESSES PARTICULARES", "PESSOAL: LICENÇA PATERNIDADE", "PESSOAL: LICENÇA POR DOENÇA EM PESSOA DA FAMÍLIA", "PESSOAL: LICENÇA SEM VENCIMENTO PARA ACOMPANHAR CÔNJUGE", "PESSOAL: LICENÇA SEM VENCIMENTO PARA TRATO DE INTERESSE PARTICULAR DE SERVIDOR", "PESSOAL: NOMEAÇÃO DE CARGO COMISSIONADO", "PESSOAL: ORIENTAÇÕES E DIRETRIZES GERAIS", "PESSOAL: PAGAMENTO DE ACUMULAÇÃO DE DEFENSOR", "PESSOAL: PAGAMENTO DE BENEFÍCIO", "PESSOAL: PENSÃO POR MORTE DE SERVIDOR", "PESSOAL: PERMUTA DE SERVIDORES", "PESSOAL: PROGRESSÃO E PROMOÇÃO (QUADRO EFETIVO)", "PESSOAL: PROMOVER DEFENSOR", "PESSOAL: PROVIMENTO - NOMEAÇÃO PARA CARGO COMISSIONADO", "PESSOAL: PROVIMENTO - NOMEAÇÃO PARA CARGO EFETIVO", "PESSOAL: PROVIMENTO - POR READAPTAÇÃO", "PESSOAL: RECADASTRAMENTO DE SERVIDORES INATIVOS/PENSIONISTAS", "PESSOAL: RECURSO - INAPTIDÃO EM EXAME ADMISSIONAL", "PESSOAL: REDUÇÃO DE CARGA HORÁRIA", "PESSOAL: REGULARIZAÇÃO DE CESSÃO - DEVOLUÇÃO DE CEDIDO", "PESSOAL: REGULARIZAÇÃO DE CESSÃO - NOMEAÇÃO DE SERVIDOR CEDIDO", "PESSOAL: REMOÇÃO POR PERMUTA DE TITULARIDADE", "PESSOAL: RESSARCIMENTO AO ERÁRIO", "PESSOAL: RESTRUTURAÇÃO DE CARGOS E FUNÇÕES", "PESSOAL: RETRIBUIÇÃO POR CARGO EM COMISSÃO", "PESSOAL: SALÁRIO-FAMÍLIA", "PESSOAL: SAÚDE - PRONTUÁRIO MÉDICO", "PESSOAL: TRIÊNIO", "PLANEJAMENTO ESTRATÉGICO: ELABORAÇÃO DO PPA E EXECUÇÃO DO PPA", "TECNOLOGIA DA INFORMAÇÃO: GESTÃO DE BENS E SERVIÇOS DE TI", "TECNOLOGIA DA INFORMAÇÃO: NORMATIZAÇÃO INTERNA", "TUTELA COLETIVA: PROCEDIMENTO DE INSTRUÇÃO"
         ];
@@ -111,6 +158,7 @@
             if (!user) window.location.href = "index.html"; 
             else {
                 isAdmin = EMAILS_ADMIN.includes(user.email);
+                inicializarModoLGPD(user);
                 carregarGuias(); 
                 atualizarDatalistSei(); 
             }
@@ -193,7 +241,7 @@
                 const btn = document.createElement("button");
                 btn.className = "btn-guia-item";
                 btn.style.cssText = `background:${corFundo}; color:white; padding:10px; margin:5px; border:none; border-radius:5px; cursor:pointer; font-weight:bold;`;
-                btn.innerText = `Guia: ${g.numero}${aviso}`;
+                btn.innerHTML = `Guia: <span class="dado-sensivel">${g.numero}</span>${aviso}`;
                 
                 if (aviso) {
                     const dataFormatada = g.dataRecebimento ? g.dataRecebimento.split('-').reverse().join('/') : 'desconhecida';
@@ -208,7 +256,7 @@
         window.abrirGuia = async (id, num) => {
             guiaAtivaId = id;
             document.getElementById("areaProcessos").style.display = "block";
-            document.getElementById("tituloGuia").innerText = `Registrar na Guia: ${num}`;
+            document.getElementById("tituloGuia").innerHTML = `Registrar na Guia: <span class="dado-sensivel">${num}</span>`;
             await atualizarContador(id);
             await window.atualizarLista(id);
         };
@@ -251,8 +299,8 @@
                 let btnExcluir = isAdmin ? `<button type="button" onclick="window.excluirProcesso('${dSnap.id}')" style="background:#e74c3c; color:white; padding:8px 12px; border:none; border-radius:4px; cursor:pointer; margin-left:5px; font-weight:bold;">🗑️ Excluir</button>` : "";
                 container.innerHTML += `<li style="padding:15px; background:#f8f9fa; border-left:4px solid var(--primary); margin-bottom:10px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
                     <div>
-                        <strong>${i++}º. Proc: ${p.numeroProcessoFisico}</strong><br>
-                        <small>Interessado: ${p.interessado} | Assunto: ${p.assunto} | Folhas: ${p.qtdFolhas}</small>
+                        <strong>${i++}º. Proc: <span class="dado-sensivel">${p.numeroProcessoFisico}</span></strong><br>
+                        <small>Interessado: <span class="dado-sensivel">${p.interessado}</span> | Assunto: <span class="dado-sensivel">${p.assunto}</span> | Folhas: ${p.qtdFolhas}</small>
                     </div>
                     <div>
                         <button type="button" onclick="window.editarProcesso('${dSnap.id}')" style="background:var(--accent); color:#333; padding:8px 12px; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">✏️ Editar</button>
