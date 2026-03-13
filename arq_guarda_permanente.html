@@ -47,6 +47,13 @@
                 <a href="arq_eliminacao.html">🔥 Lista de Eliminação</a>
                 <a href="arq_guarda_permanente.html" class="ativo">🏛️ Guarda Permanente</a>
             
+                <div id="lgpdToggleContainer" class="lgpd-toggle-container" style="display: none;">
+                    <span id="lgpdLabelTexto" class="lgpd-label">🙈 Ocultar (LGPD)</span>
+                    <label class="switch">
+                        <input type="checkbox" id="btnToggleLgpd">
+                        <span class="slider"></span>
+                    </label>
+                </div>
                 <button id="btnLogout" class="btn-sair" style="margin-top: 20px;">🚪 Sair do Sistema</button>
             </nav>
         </aside>
@@ -93,13 +100,13 @@
             <p style="color: #666; margin-top: 0; margin-bottom: 20px;">Informações para geração de Termo de Transferência.</p>
             
             <div class="detalhes-grid">
-                <div><span>Nº Processo Físico</span><strong id="detNumProcesso" style="color: #2980b9; font-size: 1.3em;">--</strong></div>
+                <div><span>Nº Processo Físico</span><strong id="detNumProcesso" class="dado-sensivel" style="color: #2980b9; font-size: 1.3em;">--</strong></div>
                 <div><span>Tipo de Processo (SEI)</span><strong id="detTipoSei">--</strong></div>
                 
-                <div style="grid-column: span 2;"><span>Interessado</span><strong id="detInteressado">--</strong></div>
-                <div style="grid-column: span 2;"><span>Assunto (Capa)</span><strong id="detAssunto">--</strong></div>
+                <div style="grid-column: span 2;"><span>Interessado</span><strong id="detInteressado" class="dado-sensivel">--</strong></div>
+                <div style="grid-column: span 2;"><span>Assunto (Capa)</span><strong id="detAssunto" class="dado-sensivel">--</strong></div>
                 
-                <div><span>Localização: Guia</span><strong id="detGuia">--</strong></div>
+                <div><span>Localização: Guia</span><strong id="detGuia" class="dado-sensivel">--</strong></div>
                 <div><span>Localização: Caixa Física</span><strong id="detCaixaProc">--</strong></div>
                 
                 <div><span>Qtd. Folhas Físicas</span><strong id="detFolhas">--</strong></div>
@@ -124,11 +131,56 @@
         import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
+        const EMAILS_ADMIN = ["rafael.nascimento-vieira@defensoria.rj.def.br"];
+
+        function inicializarModoLGPD(user) {
+            const toggleContainer = document.getElementById("lgpdToggleContainer");
+            const checkboxLgpd = document.getElementById("btnToggleLgpd");
+            const labelLgpd = document.getElementById("lgpdLabelTexto");
+            
+            if (!toggleContainer || !checkboxLgpd || !user) return;
+
+            if (EMAILS_ADMIN.includes(user.email)) {
+                toggleContainer.style.display = "flex";
+                const isLgpdActive = localStorage.getItem("lgpdMode") === "true";
+                
+                const atualizarVisualBotao = (ativo) => {
+                    checkboxLgpd.checked = ativo;
+                    if (ativo) {
+                        document.body.classList.add("modo-lgpd");
+                        labelLgpd.innerHTML = "👁️ Revelar (LGPD)";
+                        labelLgpd.style.color = "#27ae60";
+                    } else {
+                        document.body.classList.remove("modo-lgpd");
+                        labelLgpd.innerHTML = "🙈 Ocultar (LGPD)";
+                        labelLgpd.style.color = "var(--primary)";
+                    }
+                };
+
+                atualizarVisualBotao(isLgpdActive);
+
+                const novoCheckbox = checkboxLgpd.cloneNode(true);
+                checkboxLgpd.parentNode.replaceChild(novoCheckbox, checkboxLgpd);
+
+                novoCheckbox.addEventListener("change", (e) => {
+                    const isNowActive = e.target.checked;
+                    localStorage.setItem("lgpdMode", isNowActive);
+                    atualizarVisualBotao(isNowActive);
+                });
+            } else {
+                toggleContainer.style.display = "none";
+                document.body.classList.remove("modo-lgpd");
+            }
+        }
+
         window.processosVencidosMap = {};
 
         onAuthStateChanged(auth, (user) => { 
             if (!user) window.location.href = "index.html"; 
-            else carregarLista();
+            else {
+                inicializarModoLGPD(user);
+                carregarLista();
+            }
         });
         document.getElementById("btnLogout").onclick = () => signOut(auth);
 
@@ -151,7 +203,6 @@
                         const p = procDoc.data();
                         const procId = procDoc.id;
                         
-                        // O FILTRO É AQUI: Apenas Guarda Permanente
                         if (p.metadadosArquivisticos && p.metadadosArquivisticos.destinacaoFinal === "Guarda Permanente") {
                             
                             const dataVencimento = new Date(p.metadadosArquivisticos.dataPrevistaDestinacaoFinal);
@@ -166,8 +217,8 @@
                                 
                                 html += `
                                     <tr>
-                                        <td><strong>${p.numeroProcessoFisico}</strong><br><small style="color:#666;">Guia: ${numeroGuia} | Cx: ${caixaProc}</small></td>
-                                        <td>${p.interessado}</td>
+                                        <td><strong><span class="dado-sensivel">${p.numeroProcessoFisico}</span></strong><br><small style="color:#666;">Guia: <span class="dado-sensivel">${numeroGuia}</span> | Cx: ${caixaProc}</small></td>
+                                        <td><span class="dado-sensivel">${p.interessado}</span></td>
                                         <td><strong>${p.metadadosArquivisticos.codigoClassificacaoRef}</strong><br><small>${p.metadadosArquivisticos.assuntoTemporalidade || ''}</small></td>
                                         <td>${dataAberturaBR}</td>
                                         <td style="color: #2980b9; font-weight: bold;">${dataVencimentoBR}</td>
