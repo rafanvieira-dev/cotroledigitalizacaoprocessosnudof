@@ -36,6 +36,13 @@
                 <a href="arq_eliminacao.html">🔥 Lista de Eliminação</a>
                 <a href="arq_guarda_permanente.html">🏛️ Guarda Permanente</a>
 
+                <div id="lgpdToggleContainer" class="lgpd-toggle-container" style="display: none;">
+                    <span id="lgpdLabelTexto" class="lgpd-label">🙈 Ocultar (LGPD)</span>
+                    <label class="switch">
+                        <input type="checkbox" id="btnToggleLgpd">
+                        <span class="slider"></span>
+                    </label>
+                </div>
                 <button id="btnLogout" class="btn-sair" style="margin-top: 20px;">🚪 Sair do Sistema</button>
             </nav>
         </aside>
@@ -63,6 +70,48 @@
         import { db, auth } from "./firebase.js";
         import { collection, getDocs, updateDoc, doc, query, where } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+
+        const EMAILS_ADMIN = ["rafael.nascimento-vieira@defensoria.rj.def.br"];
+
+        function inicializarModoLGPD(user) {
+            const toggleContainer = document.getElementById("lgpdToggleContainer");
+            const checkboxLgpd = document.getElementById("btnToggleLgpd");
+            const labelLgpd = document.getElementById("lgpdLabelTexto");
+            
+            if (!toggleContainer || !checkboxLgpd || !user) return;
+
+            if (EMAILS_ADMIN.includes(user.email)) {
+                toggleContainer.style.display = "flex";
+                const isLgpdActive = localStorage.getItem("lgpdMode") === "true";
+                
+                const atualizarVisualBotao = (ativo) => {
+                    checkboxLgpd.checked = ativo;
+                    if (ativo) {
+                        document.body.classList.add("modo-lgpd");
+                        labelLgpd.innerHTML = "👁️ Revelar (LGPD)";
+                        labelLgpd.style.color = "#27ae60";
+                    } else {
+                        document.body.classList.remove("modo-lgpd");
+                        labelLgpd.innerHTML = "🙈 Ocultar (LGPD)";
+                        labelLgpd.style.color = "var(--primary)";
+                    }
+                };
+
+                atualizarVisualBotao(isLgpdActive);
+
+                const novoCheckbox = checkboxLgpd.cloneNode(true);
+                checkboxLgpd.parentNode.replaceChild(novoCheckbox, checkboxLgpd);
+
+                novoCheckbox.addEventListener("change", (e) => {
+                    const isNowActive = e.target.checked;
+                    localStorage.setItem("lgpdMode", isNowActive);
+                    atualizarVisualBotao(isNowActive);
+                });
+            } else {
+                toggleContainer.style.display = "none";
+                document.body.classList.remove("modo-lgpd");
+            }
+        }
 
         let guiaAtualId = "";
         let processosDaGuia = [];
@@ -95,8 +144,8 @@
                     div.style.borderLeftColor = "var(--secondary)";
                     div.innerHTML = `
                         <div class="guia-info">
-                            <h4>Guia: ${g.numero}</h4>
-                            <p><strong>Unidade:</strong> ${g.unidade}</p>
+                            <h4>Guia: <span class="dado-sensivel">${g.numero}</span></h4>
+                            <p><strong>Unidade:</strong> <span class="dado-sensivel">${g.unidade}</span></p>
                         </div>
                         <button onclick="window.abrirDigitalizacao('${g.id}', '${g.numero}')" 
                                 style="background:var(--secondary); color:white; padding:10px 20px; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">
@@ -112,7 +161,7 @@
 
         window.abrirDigitalizacao = async (id, num) => {
             guiaAtualId = id; processosDaGuia = [];
-            document.getElementById("tituloModalArquivar").innerText = "Digitalização - Guia: " + num;
+            document.getElementById("tituloModalArquivar").innerHTML = `Digitalização - Guia: <span class="dado-sensivel">${num}</span>`;
             document.getElementById("modalArquivar").style.display = "block";
             try {
                 const snap = await getDocs(collection(db, "guias", id, "processos"));
@@ -139,7 +188,7 @@
                     const eventoSei = index === 0 ? `oninput="window.replicarDadosPrimeiraLinha('dataSei', this.value)"` : "";
 
                     html += `<tr>
-                        <td class="col-proc"><b>${p.numeroProcessoFisico}</b></td>
+                        <td class="col-proc"><b><span class="dado-sensivel">${p.numeroProcessoFisico}</span></b></td>
                         <td><input type="date" id="dataDig_${procId}" ${eventoDig} required></td>
                         <td><input type="date" id="dataSei_${procId}" ${eventoSei} required></td>
                         <td><input type="number" id="qtdImg_${procId}" required min="1"></td>
@@ -197,7 +246,15 @@
         };
 
         document.getElementById("closeArquivar").onclick = () => document.getElementById("modalArquivar").style.display = "none";
-        onAuthStateChanged(auth, (user) => { if (user) carregar(); else window.location.href = "index.html"; });
+        
+        onAuthStateChanged(auth, (user) => { 
+            if (user) {
+                inicializarModoLGPD(user);
+                carregar(); 
+            } else {
+                window.location.href = "index.html"; 
+            }
+        });
         document.getElementById("btnLogout").onclick = () => signOut(auth);
     </script>
 </body>
