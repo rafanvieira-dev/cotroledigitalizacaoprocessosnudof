@@ -105,3 +105,87 @@ input, select, textarea { width: 100%; padding: 12px; margin: 10px 0 20px 0; bor
     color: var(--secondary);
     font-size: 0.95em;
 }
+
+/* --- MODO LGPD (Privacidade de Dados) --- */
+body.modo-lgpd .dado-sensivel {
+    filter: blur(5px);
+    opacity: 0.6;
+    user-select: none;
+    transition: filter 0.3s ease, opacity 0.3s ease;
+}
+
+body.modo-lgpd .dado-sensivel:hover {
+    filter: blur(0);
+    opacity: 1;
+}
+
+@media print {
+    body.modo-lgpd .dado-sensivel {
+        filter: blur(5px) !important;
+    }
+}
+
+/* --- ESTILO DO INTERRUPTOR (TOGGLE SWITCH) LGPD --- */
+.lgpd-toggle-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 15px;
+    margin-top: 15px;
+    background-color: #f1f2f6;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+}
+
+.lgpd-label {
+    font-size: 0.9em;
+    font-weight: bold;
+    color: var(--primary);
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    margin: 0;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #27ae60;
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px #27ae60;
+}
+
+input:checked + .slider:before {
+    transform: translateX(20px);
+}
