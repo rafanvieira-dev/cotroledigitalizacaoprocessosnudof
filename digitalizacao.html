@@ -61,7 +61,7 @@
                 <div style="background: var(--bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border); overflow-x: auto;">
                     <div id="areaDocumentosArquivar"></div>
                 </div>
-                <button type="submit" class="btn-primary" id="btnConfirmarArq" style="margin-top:15px;">✅ CONCLUIR DIGITALIZAÇÃO</button>
+                <button type="submit" class="btn-primary" id="btnConfirmarArq" style="margin-top:15px;"><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M20 6 9 17l-5-5'/></svg> CONCLUIR DIGITALIZAÇÃO</button>
             </form>
         </div>
     </div>
@@ -88,11 +88,11 @@
                     checkboxLgpd.checked = ativo;
                     if (ativo) {
                         document.body.classList.add("modo-lgpd");
-                        labelLgpd.innerHTML = "👁️ Revelar (LGPD)";
+                        labelLgpd.innerHTML = "<svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6'/></svg> Revelar (LGPD)";
                         labelLgpd.style.color = "#27ae60";
                     } else {
                         document.body.classList.remove("modo-lgpd");
-                        labelLgpd.innerHTML = "🙈 Ocultar (LGPD)";
+                        labelLgpd.innerHTML = "<svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 5.2A10.8 10.8 0 0 1 12 5c5 0 9 4.5 10 7-.4 1-1.3 2.4-2.7 3.7M6.2 6.2C3.8 7.8 2.4 10.4 2 12c1 2.5 5 7 10 7 1.2 0 2.3-.2 3.3-.7'/></svg> Ocultar (LGPD)";
                         labelLgpd.style.color = "var(--primary)";
                     }
                 };
@@ -149,7 +149,7 @@
                         </div>
                         <button onclick="window.abrirDigitalizacao('${g.id}', '${g.numero}')" 
                                 style="background:var(--secondary); color:white; padding:10px 20px; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">
-                            🖨️ Iniciar Digitalização
+                            <svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v7H6z'/></svg> Iniciar Digitalização
                         </button>`;
                     container.appendChild(div);
                 });
@@ -241,7 +241,7 @@
                 alert("Erro ao salvar dados."); 
             } finally {
                 btn.disabled = false;
-                btn.innerText = "✅ CONCLUIR DIGITALIZAÇÃO";
+                btn.innerText = " CONCLUIR DIGITALIZAÇÃO";
             }
         };
 
