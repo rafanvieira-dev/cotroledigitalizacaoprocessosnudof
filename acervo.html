@@ -73,11 +73,11 @@
             
             <div class="filtros-relatorio">
                 <div class="linha-busca">
-                    <label style="font-weight: bold; color: var(--primary); display: block; margin-bottom: 8px;">🔍 Busca Rápida no Acervo:</label>
+                    <label style="font-weight: bold; color: var(--primary); display: block; margin-bottom: 8px;"><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM17 17l5 5'/></svg> Busca Rápida no Acervo:</label>
                     <input type="text" id="buscaGuiaInput" class="input-busca" placeholder="Digite o Número da Guia ou Unidade..." oninput="window.filtrarAcervo()">
                 </div>
                 <div class="linha-relatorios">
-                    <button class="btn-primary" onclick="window.abrirDashboard()" style="width: auto; padding: 10px 20px; margin-left: auto;">📊 Ver Produção Digital</button>
+                    <button class="btn-primary" onclick="window.abrirDashboard()" style="width: auto; padding: 10px 20px; margin-left: auto;"><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M3 3v18h18M8 16v-5M13 16V6M18 16v-8'/></svg> Ver Produção Digital</button>
                 </div>
             </div>
             
@@ -96,7 +96,7 @@
     <div id="modalClassificacao" class="modal">
         <div class="modal-content" style="width: 95%; max-width: 700px;">
             <span class="close-btn" onclick="document.getElementById('modalClassificacao').style.display='none'" style="float: right; cursor: pointer; font-size: 1.5em;">&times;</span>
-            <h3 style="color: var(--primary); margin-bottom: 15px;">⚖️ Classificar Processo Físico</h3>
+            <h3 style="color: var(--primary); margin-bottom: 15px;"><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M12 3v18M5 6h14M7 6l-4 7h8L7 6zM17 6l-4 7h8l-4-7zM7 21h10'/></svg> Classificar Processo Físico</h3>
             <p><strong>Processo:</strong> <span id="classifNumeroProc" class="dado-sensivel" style="color:var(--secondary); font-weight:bold;"></span></p>
             
             <form id="formClassificacao">
@@ -116,15 +116,15 @@
     <div id="modalDashboard" class="modal">
         <div class="modal-content" style="width: 95%; max-width: 1100px;">
             <span class="close-btn" id="closeDashboard" style="float: right; cursor: pointer; font-size: 1.5em; color: var(--text-dark);">&times;</span>
-            <h3 style="color: var(--primary); margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">📊 Dashboard de Processos Digitais</h3>
+            <h3 style="color: var(--primary); margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;"><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M3 3v18h18M8 16v-5M13 16V6M18 16v-8'/></svg> Dashboard de Processos Digitais</h3>
             
             <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
                 <label style="font-weight: bold; color: #333;">Agrupamento de Tempo:</label>
                 <select id="tipoAgrupamento" onchange="window.atualizarGrafico()" style="width: auto; padding: 8px; margin: 0; border: 1px solid var(--border);">
                     <option value="diaria">Diário</option><option value="mensal">Mensal</option><option value="semestral">Semestral</option><option value="anual">Anual</option>
                 </select>
-                <span id="loadingDashboard" style="color: var(--secondary); font-weight: bold; display: none; margin-left: 15px;">🔄 Carregando...</span>
-                <button class="btn-primary" onclick="window.print()" style="margin-left: auto; width: auto; padding: 8px 15px;">🖨️ Imprimir Dashboard</button>
+                <span id="loadingDashboard" style="color: var(--secondary); font-weight: bold; display: none; margin-left: 15px;"><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M20 7v5h-5M4 17v-5h5M5.6 9A7 7 0 0 1 17 6l3 6M4 12l3 6a7 7 0 0 0 11.4-3'/></svg> Carregando...</span>
+                <button class="btn-primary" onclick="window.print()" style="margin-left: auto; width: auto; padding: 8px 15px;"><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v7H6z'/></svg> Imprimir Dashboard</button>
             </div>
             
             <div style="display: flex; gap: 20px; margin-bottom: 25px;">
@@ -166,11 +166,11 @@
                     checkboxLgpd.checked = ativo;
                     if (ativo) {
                         document.body.classList.add("modo-lgpd");
-                        labelLgpd.innerHTML = "👁️ Revelar (LGPD)";
+                        labelLgpd.innerHTML = "<svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6'/></svg> Revelar (LGPD)";
                         labelLgpd.style.color = "#27ae60";
                     } else {
                         document.body.classList.remove("modo-lgpd");
-                        labelLgpd.innerHTML = "🙈 Ocultar (LGPD)";
+                        labelLgpd.innerHTML = "<svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 5.2A10.8 10.8 0 0 1 12 5c5 0 9 4.5 10 7-.4 1-1.3 2.4-2.7 3.7M6.2 6.2C3.8 7.8 2.4 10.4 2 12c1 2.5 5 7 10 7 1.2 0 2.3-.2 3.3-.7'/></svg> Ocultar (LGPD)";
                         labelLgpd.style.color = "var(--primary)";
                     }
                 };
@@ -506,13 +506,13 @@
                 
                 const btnCaixa = document.createElement("button"); 
                 btnCaixa.className = "data-header-btn btn-caixa";
-                btnCaixa.innerHTML = `<div><span>📦 Caixa de Guia: <strong>${nomeCaixaG}</strong></span> <span class="contador-guias">${objCaixaG.total} guias</span></div><span class="toggle-icon">${expandirAutomatico ? "➖" : "➕"}</span>`;
+                btnCaixa.innerHTML = `<div><span><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7M12 11v10'/></svg> Caixa de Guia: <strong>${nomeCaixaG}</strong></span> <span class="contador-guias">${objCaixaG.total} guias</span></div><span class="toggle-icon">${expandirAutomatico ? "−" : "+"}</span>`;
                 
                 const divCaixa = document.createElement("div"); 
                 divCaixa.className = "grupo-caixa";
                 if(expandirAutomatico) divCaixa.style.display = "block";
                 
-                btnCaixa.onclick = () => { const aberto = divCaixa.style.display === "block"; divCaixa.style.display = aberto ? "none" : "block"; btnCaixa.querySelector('.toggle-icon').innerText = aberto ? "➕" : "➖"; };
+                btnCaixa.onclick = () => { const aberto = divCaixa.style.display === "block"; divCaixa.style.display = aberto ? "none" : "block"; btnCaixa.querySelector('.toggle-icon').innerText = aberto ? "+" : "−"; };
                 container.appendChild(btnCaixa); container.appendChild(divCaixa);
 
                 Object.keys(objCaixaG.subcaixas).sort().forEach(nomeCaixaP => {
@@ -520,13 +520,13 @@
                     
                     const btnSubcaixa = document.createElement("button");
                     btnSubcaixa.className = "data-header-btn btn-caixa-docs";
-                    btnSubcaixa.innerHTML = `<div><span>🗃️ Caixa de Processos: <strong>${nomeCaixaP}</strong></span> <span class="contador-guias" style="background:var(--accent); color:#333;">${guiasDaSubcaixa.length} guias</span></div><span class="toggle-icon">${expandirAutomatico ? "➖" : "➕"}</span>`;
+                    btnSubcaixa.innerHTML = `<div><span><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M3 4h18v5H3zM5 9v11h14V9M9 13h6'/></svg> Caixa de Processos: <strong>${nomeCaixaP}</strong></span> <span class="contador-guias" style="background:var(--accent); color:#333;">${guiasDaSubcaixa.length} guias</span></div><span class="toggle-icon">${expandirAutomatico ? "−" : "+"}</span>`;
 
                     const divSubcaixa = document.createElement("div");
                     divSubcaixa.className = "grupo-caixa-docs";
                     if(expandirAutomatico) divSubcaixa.style.display = "block";
 
-                    btnSubcaixa.onclick = () => { const aberto = divSubcaixa.style.display === "block"; divSubcaixa.style.display = aberto ? "none" : "block"; btnSubcaixa.querySelector('.toggle-icon').innerText = aberto ? "➕" : "➖"; }
+                    btnSubcaixa.onclick = () => { const aberto = divSubcaixa.style.display === "block"; divSubcaixa.style.display = aberto ? "none" : "block"; btnSubcaixa.querySelector('.toggle-icon').innerText = aberto ? "+" : "−"; }
 
                     divCaixa.appendChild(btnSubcaixa); divCaixa.appendChild(divSubcaixa);
 
@@ -534,8 +534,8 @@
                         let btnAdmin = "";
                         if (isAdmin) {
                             btnAdmin = `
-                            <button onclick="window.desarquivarGuia('${g.id}', '${g.numero}')" style="background:#f39c12; color:white; padding:8px 12px; border:none; border-radius:4px; cursor:pointer; margin-right:5px;" title="Voltar para status Aberta">↩️ Desarquivar</button>
-                            <button onclick="window.excluirGuiaAcervo('${g.id}', '${g.numero}')" style="background:#e74c3c; color:white; padding:8px 12px; border:none; border-radius:4px; cursor:pointer; margin-right:5px;" title="Excluir Guia e Processos">🗑️ Excluir</button>
+                            <button onclick="window.desarquivarGuia('${g.id}', '${g.numero}')" style="background:#f39c12; color:white; padding:8px 12px; border:none; border-radius:4px; cursor:pointer; margin-right:5px;" title="Voltar para status Aberta"><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-2'/></svg> Desarquivar</button>
+                            <button onclick="window.excluirGuiaAcervo('${g.id}', '${g.numero}')" style="background:#e74c3c; color:white; padding:8px 12px; border:none; border-radius:4px; cursor:pointer; margin-right:5px;" title="Excluir Guia e Processos"><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15M10 10v7M14 10v7'/></svg> Excluir</button>
                             `;
                         }
 
@@ -543,16 +543,16 @@
                         div.innerHTML = `
                             <div class="info-box" style="flex: 1.5;">
                                 <strong style="color:var(--primary);">Guia: <span class="dado-sensivel">${g.numero}</span></strong><br><small>Unidade: <span class="dado-sensivel">${g.unidade}</span></small><br>
-                                <span class="badge-user">👤 Resp: <span class="dado-sensivel">${g.arquivadoPor || '---'}</span></span>
+                                <span class="badge-user"><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M20 21a8 8 0 0 0-16 0M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10'/></svg> Resp: <span class="dado-sensivel">${g.arquivadoPor || '---'}</span></span>
                             </div>
                             <div style="flex: 1; text-align: center;">
                                 <span style="background:var(--sidebar-bg); border:1px solid var(--border); border-radius:5px; padding:6px 12px; font-weight:bold; font-size:0.9em; color:var(--primary);">
-                                    📅 Arq: ${g.dataArquivamentoSistema || 'Sem data'}
+                                    <svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M4 5h16v16H4zM8 3v4M16 3v4M4 10h16'/></svg> Arq: ${g.dataArquivamentoSistema || 'Sem data'}
                                 </span>
                             </div>
                             <div style="flex: 1.5; text-align: right;">
                                 ${btnAdmin}
-                                <button class="btn-primary" onclick="window.verDetalhes('${g.id}', '${g.numero}')" style="width:auto; padding:8px 12px;">👁 Ver Detalhes</button>
+                                <button class="btn-primary" onclick="window.verDetalhes('${g.id}', '${g.numero}')" style="width:auto; padding:8px 12px;"><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6'/></svg> Ver Detalhes</button>
                             </div>`;
                         divSubcaixa.appendChild(div);
                     });
@@ -571,7 +571,7 @@
         };
 
         window.excluirGuiaAcervo = async (id, num) => {
-            if(confirm(`🚨 PERIGO: Deseja EXCLUIR DEFINITIVAMENTE a Guia ${num} e TODOS os processos dentro dela?\nEsta ação não tem volta!`)) {
+            if(confirm(` PERIGO: Deseja EXCLUIR DEFINITIVAMENTE a Guia ${num} e TODOS os processos dentro dela?\nEsta ação não tem volta!`)) {
                 try {
                     const procs = await getDocs(collection(db, "guias", id, "processos"));
                     const promessas = procs.docs.map(p => deleteDoc(doc(db, "guias", id, "processos", p.id)));
@@ -596,10 +596,10 @@
 
                 let html = `
                     <div style="margin-bottom:20px; padding:15px; background:var(--sidebar-bg); border-radius:8px; border:1px solid var(--border); display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                        <div><b style="color:var(--primary);">👤 Guia Criada por:</b> <span class="dado-sensivel">${g.criadoPor || '--'}</span></div>
-                        <div><b style="color:var(--primary);">👤 Arquivado por:</b> <span class="dado-sensivel">${g.arquivadoPor || '--'}</span></div>
-                        <div><b style="color:var(--primary);">📦 Caixa da Guia:</b> ${g.locCaixaGuia || '--'}</div>
-                        <div><b style="color:var(--primary);">🗃️ Caixa de Processos:</b> ${g.locCaixaProc || '--'}</div>
+                        <div><b style="color:var(--primary);"><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M20 21a8 8 0 0 0-16 0M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10'/></svg> Guia Criada por:</b> <span class="dado-sensivel">${g.criadoPor || '--'}</span></div>
+                        <div><b style="color:var(--primary);"><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M20 21a8 8 0 0 0-16 0M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10'/></svg> Arquivado por:</b> <span class="dado-sensivel">${g.arquivadoPor || '--'}</span></div>
+                        <div><b style="color:var(--primary);"><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7M12 11v10'/></svg> Caixa da Guia:</b> ${g.locCaixaGuia || '--'}</div>
+                        <div><b style="color:var(--primary);"><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M3 4h18v5H3zM5 9v11h14V9M9 13h6'/></svg> Caixa de Processos:</b> ${g.locCaixaProc || '--'}</div>
                     </div>
                     <table style="width:100%; border-collapse: collapse; font-size:13px; text-align:left;">
                     <thead><tr style="background:var(--primary); color:white;">
@@ -614,9 +614,9 @@
                     
                     let btnAcao = "";
                     if (p.metadadosArquivisticos) {
-                        btnAcao = `<span style="color: #27ae60; font-weight: bold;">✅ Classificado (${p.metadadosArquivisticos.codigoClassificacaoRef})</span><br><small style="color:#555;">${p.metadadosArquivisticos.destinacaoFinal}</small>`;
+                        btnAcao = `<span style="color: #27ae60; font-weight: bold;"><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M20 6 9 17l-5-5'/></svg> Classificado (${p.metadadosArquivisticos.codigoClassificacaoRef})</span><br><small style="color:#555;">${p.metadadosArquivisticos.destinacaoFinal}</small>`;
                     } else {
-                        btnAcao = `<button onclick="window.abrirModalClassificacao('${id}', '${procId}', '${p.numeroProcessoFisico}', '${p.dataAbertura}')" style="background: #3498db; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight:bold;">⚖️ Classificar (e-ARQ)</button>`;
+                        btnAcao = `<button onclick="window.abrirModalClassificacao('${id}', '${procId}', '${p.numeroProcessoFisico}', '${p.dataAbertura}')" style="background: #3498db; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight:bold;"><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M12 3v18M5 6h14M7 6l-4 7h8L7 6zM17 6l-4 7h8l-4-7zM7 21h10'/></svg> Classificar (e-ARQ)</button>`;
                     }
 
                     html += `<tr>
@@ -652,7 +652,7 @@
             const regraEncontrada = tabelaOficialDPRJ.find(r => r.cod === codigoDigitado);
             
             if (!regraEncontrada) {
-                alert("⚠️ Código inválido! Por favor, selecione um código oficial da lista.");
+                alert(" Código inválido! Por favor, selecione um código oficial da lista.");
                 return;
             }
 
@@ -746,7 +746,7 @@
                         const index = context.dataIndex; const totalBarra = context.parsed.y; const qtdDias = diasPorBarra[index];
                         const mediaPorDia = qtdDias > 0 ? (totalBarra / qtdDias).toFixed(1) : 0;
                         let tooltipLines = [`Total: ${totalBarra} imagens`];
-                        if (tipo !== "diaria") { tooltipLines.push(`📅 Dias trabalhados: ${qtdDias}`, `📊 Média: ${String(mediaPorDia).replace('.', ',')} imagens/dia`); } 
+                        if (tipo !== "diaria") { tooltipLines.push(` Dias trabalhados: ${qtdDias}`, ` Média: ${String(mediaPorDia).replace('.', ',')} imagens/dia`); } 
                         return tooltipLines;
                     }}}}, 
                     scales: { y: { beginAtZero: true, title: { display: true, text: 'Nº de Imagens' } } } 
