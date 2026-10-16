@@ -58,23 +58,23 @@
                 <div style="background: #e8f4fd; padding: 20px; border-radius: 8px; border: 1px solid #b6d4fe; display: flex; flex-direction: column; gap: 20px;">
                     
                     <div class="linha-data">
-                        <label>📅 Data de Arquivamento Físico:</label>
+                        <label><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M4 5h16v16H4zM8 3v4M16 3v4M4 10h16'/></svg> Data de Arquivamento Físico:</label>
                         <input type="date" id="dataArquivamentoManual" required style="flex: 1;">
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                         <div class="input-group">
-                            <label>📦 Caixa - Localização Guia:</label>
+                            <label><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7M12 11v10'/></svg> Caixa - Localização Guia:</label>
                             <input type="text" id="locCaixaGuia" required placeholder="Ex: G-01">
                         </div>
                         <div class="input-group">
-                            <label>🗃️ Nº Caixa - Localização Processo:</label>
+                            <label><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M3 4h18v5H3zM5 9v11h14V9M9 13h6'/></svg> Nº Caixa - Localização Processo:</label>
                             <input type="text" id="locCaixaProc" required placeholder="Ex: P-045">
                         </div>
                     </div>
                 </div>
 
-                <button type="submit" class="btn-primary" id="btnConfirmarArq" style="background:#27ae60; padding: 15px; font-weight: bold; width: 100%; margin-top: 15px; font-size: 1.1em;">✅ CONCLUIR ARQUIVAMENTO</button>
+                <button type="submit" class="btn-primary" id="btnConfirmarArq" style="background:#27ae60; padding: 15px; font-weight: bold; width: 100%; margin-top: 15px; font-size: 1.1em;"><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M20 6 9 17l-5-5'/></svg> CONCLUIR ARQUIVAMENTO</button>
             </form>
         </div>
     </div>
@@ -101,11 +101,11 @@
                     checkboxLgpd.checked = ativo;
                     if (ativo) {
                         document.body.classList.add("modo-lgpd");
-                        labelLgpd.innerHTML = "👁️ Revelar (LGPD)";
+                        labelLgpd.innerHTML = "<svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6'/></svg> Revelar (LGPD)";
                         labelLgpd.style.color = "#27ae60";
                     } else {
                         document.body.classList.remove("modo-lgpd");
-                        labelLgpd.innerHTML = "🙈 Ocultar (LGPD)";
+                        labelLgpd.innerHTML = "<svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 5.2A10.8 10.8 0 0 1 12 5c5 0 9 4.5 10 7-.4 1-1.3 2.4-2.7 3.7M6.2 6.2C3.8 7.8 2.4 10.4 2 12c1 2.5 5 7 10 7 1.2 0 2.3-.2 3.3-.7'/></svg> Ocultar (LGPD)";
                         labelLgpd.style.color = "var(--primary)";
                     }
                 };
@@ -148,7 +148,7 @@
                 snap.forEach(d => {
                     const g = d.data();
                     const div = document.createElement("div"); div.className = "guia-card-arquivar";
-                    div.innerHTML = `<div><strong>Guia <span class="dado-sensivel">${g.numero}</span></strong><br><small><span class="dado-sensivel">${g.unidade}</span></small></div><button class="btn-ver" onclick="window.abrirArq('${d.id}', '${g.numero}')" style="background:#27ae60; color:white; padding:8px 15px; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">📦 Registrar Arquivamento</button>`;
+                    div.innerHTML = `<div><strong>Guia <span class="dado-sensivel">${g.numero}</span></strong><br><small><span class="dado-sensivel">${g.unidade}</span></small></div><button class="btn-ver" onclick="window.abrirArq('${d.id}', '${g.numero}')" style="background:#27ae60; color:white; padding:8px 15px; border:none; border-radius:4px; cursor:pointer; font-weight:bold;"><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7M12 11v10'/></svg> Registrar Arquivamento</button>`;
                     container.appendChild(div);
                 });
             } catch (err) { console.error(err); }
@@ -157,7 +157,7 @@
         window.abrirArq = (id, num) => {
             guiaAtualId = id;
             document.getElementById("btnConfirmarArq").disabled = false;
-            document.getElementById("btnConfirmarArq").innerText = "✅ CONCLUIR ARQUIVAMENTO";
+            document.getElementById("btnConfirmarArq").innerText = " CONCLUIR ARQUIVAMENTO";
             document.getElementById("tituloModalArquivar").innerHTML = `Arquivar Processos da Guia: <span class="dado-sensivel">${num}</span>`;
             
             document.getElementById("dataArquivamentoManual").value = new Date().toISOString().split('T')[0];
