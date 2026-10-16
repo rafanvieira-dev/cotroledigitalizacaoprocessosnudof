@@ -27,7 +27,7 @@
         <div class="login-box">
             <div style="background-color: #006b33; color: white; padding: 15px; margin: -40px -40px 30px -40px; border-radius: 8px 8px 0 0; font-weight: bold;">SISTEMA DE PROCESSOS NUDOF</div>
             <h2 style="margin-bottom: 20px;">Acesso Restrito</h2>
-            <button id="btnGoogle" class="btn-primary" style="background-color: #4285F4; width: 100%;">🌐 Entrar com Google</button>
+            <button id="btnGoogle" class="btn-primary" style="background-color: #4285F4; width: 100%;"><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20'/></svg> Entrar com Google</button>
             <p id="erroMsg" style="color: #e74c3c; margin-top: 15px; font-weight: bold;"></p>
         </div>
     </div>
@@ -72,7 +72,7 @@
                     <p style="color: #666; font-size: 0.9em; margin: 0;">Acesse o sistema de Digitalização de Documentos.</p>
                 </div>
                 <a href="https://rafanvieira-dev.github.io/controle-digitalizacaonudof/index.html" target="_self" class="btn-primary" style="text-decoration: none; width: auto; padding: 12px 20px; background-color: #3498db; display: inline-block;">
-                    🔗 Digitalização de Documentos
+                    <svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7M14 11a5 5 0 0 0-7.1 0l-3 3A5 5 0 0 0 11 21.1l1.7-1.7'/></svg> Digitalização de Documentos
                 </a>
             </div>
 
@@ -185,45 +185,45 @@
                     if (contagem[statusMacro] === 0) return;
                     const btnStatus = document.createElement("button");
                     btnStatus.className = `aba-header-btn ${statusMacro === 'Ativas' ? 'aba-aberta' : 'aba-arquivada'}`;
-                    btnStatus.innerHTML = `<div><span>📂 Guias ${statusMacro}</span> <span class="contador-index">${contagem[statusMacro]} guias</span></div><span>➕</span>`;
+                    btnStatus.innerHTML = `<div><span><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M3 6a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2l-2 10H3z'/></svg> Guias ${statusMacro}</span> <span class="contador-index">${contagem[statusMacro]} guias</span></div><span>+</span>`;
                     const containerStatus = document.createElement("div"); containerStatus.className = "grupo-conteudo";
                     btnStatus.onclick = () => {
                         const aberto = containerStatus.style.display === "block";
                         containerStatus.style.display = aberto ? "none" : "block";
-                        btnStatus.querySelector('span:last-child').innerText = aberto ? "➕" : "➖";
+                        btnStatus.querySelector('span:last-child').innerText = aberto ? "+" : "−";
                     };
                     display.appendChild(btnStatus); display.appendChild(containerStatus);
 
                     Object.keys(grupos[statusMacro]).sort().forEach(anoStr => {
                         const anoObj = grupos[statusMacro][anoStr];
                         const btnAno = document.createElement("button"); btnAno.className = "aba-header-btn btn-ano";
-                        btnAno.innerHTML = `<div><span>📁 Ano: ${anoStr}</span> <span class="contador-index">${anoObj.total} guias</span></div><span>➕</span>`;
+                        btnAno.innerHTML = `<div><span><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M3 6a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10H3z'/></svg> Ano: ${anoStr}</span> <span class="contador-index">${anoObj.total} guias</span></div><span>+</span>`;
                         const divAno = document.createElement("div"); divAno.className = "grupo-ano";
                         btnAno.onclick = () => {
                             const aberto = divAno.style.display === "block"; divAno.style.display = aberto ? "none" : "block";
-                            btnAno.querySelector('span:last-child').innerText = aberto ? "➕" : "➖";
+                            btnAno.querySelector('span:last-child').innerText = aberto ? "+" : "−";
                         };
                         containerStatus.appendChild(btnAno); containerStatus.appendChild(divAno);
 
                         Object.keys(anoObj.meses).sort().forEach(mesStr => {
                             const mesObj = anoObj.meses[mesStr];
                             const btnMes = document.createElement("button"); btnMes.className = "aba-header-btn btn-mes";
-                            btnMes.innerHTML = `<div><span>📂 ${nomeMeses[mesStr] || mesStr}</span> <span class="contador-index">${mesObj.total} guias</span></div><span>➕</span>`;
+                            btnMes.innerHTML = `<div><span><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M3 6a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2l-2 10H3z'/></svg> ${nomeMeses[mesStr] || mesStr}</span> <span class="contador-index">${mesObj.total} guias</span></div><span>+</span>`;
                             const divMes = document.createElement("div"); divMes.className = "grupo-mes";
                             btnMes.onclick = () => {
                                 const aberto = divMes.style.display === "block"; divMes.style.display = aberto ? "none" : "block";
-                                btnMes.querySelector('span:last-child').innerText = aberto ? "➕" : "➖";
+                                btnMes.querySelector('span:last-child').innerText = aberto ? "+" : "−";
                             };
                             divAno.appendChild(btnMes); divAno.appendChild(divMes);
 
                             Object.keys(mesObj.dias).sort().forEach(diaStr => {
                                 const guiasDoDia = mesObj.dias[diaStr];
                                 const btnDia = document.createElement("button"); btnDia.className = "aba-header-btn btn-dia";
-                                btnDia.innerHTML = `<div><span>📅 ${diaStr}/${mesStr}/${anoStr}</span> <span class="contador-index">${guiasDoDia.length} guias</span></div><span>➕</span>`;
+                                btnDia.innerHTML = `<div><span><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M4 5h16v16H4zM8 3v4M16 3v4M4 10h16'/></svg> ${diaStr}/${mesStr}/${anoStr}</span> <span class="contador-index">${guiasDoDia.length} guias</span></div><span>+</span>`;
                                 const divDia = document.createElement("div"); divDia.className = "grupo-dia";
                                 btnDia.onclick = () => {
                                     const aberto = divDia.style.display === "block"; divDia.style.display = aberto ? "none" : "block";
-                                    btnDia.querySelector('span:last-child').innerText = aberto ? "➕" : "➖";
+                                    btnDia.querySelector('span:last-child').innerText = aberto ? "+" : "−";
                                 };
                                 divMes.appendChild(btnDia); divMes.appendChild(divDia);
 
