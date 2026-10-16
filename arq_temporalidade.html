@@ -47,13 +47,13 @@
             <h2 class="page-title">Dicionário da Tabela de Temporalidade Oficial</h2>
             
             <div class="painel-informativo">
-                <strong>ℹ️ Modo de Consulta Rápida:</strong> Este painel exibe a Tabela de Temporalidade de Documentos (Atividade-Meio) oficial da DPRJ. Utilize a barra de pesquisa abaixo para encontrar rapidamente o prazo legal de guarda de qualquer assunto ou código.
+                <strong><svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 11v5M12 7h.01'/></svg> Modo de Consulta Rápida:</strong> Este painel exibe a Tabela de Temporalidade de Documentos (Atividade-Meio) oficial da DPRJ. Utilize a barra de pesquisa abaixo para encontrar rapidamente o prazo legal de guarda de qualquer assunto ou código.
             </div>
 
-            <input type="text" id="buscaRegra" class="input-busca" placeholder="🔍 Pesquisar por Código (ex: 0-2-4) ou Assunto (ex: Férias)..." oninput="window.filtrarTabela()">
+            <input type="text" id="buscaRegra" class="input-busca" placeholder=" Pesquisar por Código (ex: 0-2-4) ou Assunto (ex: Férias)..." oninput="window.filtrarTabela()">
             
             <div id="msgVazio" class="msg-placeholder">
-                ☝️ Digite um código ou assunto na barra acima para pesquisar.
+                <svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 16V7M9 10l3-3 3 3'/></svg> Digite um código ou assunto na barra acima para pesquisar.
             </div>
 
             <div id="areaTabela" style="display: none; max-height: 60vh; overflow-y: auto; border-radius: 8px; border: 1px solid var(--border);">
@@ -227,7 +227,7 @@
             if (buscaVazia) {
                 areaTabela.style.display = "none";
                 msgVazio.style.display = "block";
-                msgVazio.innerHTML = "☝️ Digite um código ou assunto na barra acima para pesquisar.";
+                msgVazio.innerHTML = "<svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 16V7M9 10l3-3 3 3'/></svg> Digite um código ou assunto na barra acima para pesquisar.";
                 msgVazio.style.color = "#7f8c8d";
                 return;
             }
@@ -235,7 +235,7 @@
             if (lista.length === 0) {
                 areaTabela.style.display = "none";
                 msgVazio.style.display = "block";
-                msgVazio.innerHTML = "❌ Nenhuma regra ou código encontrado com esse termo.";
+                msgVazio.innerHTML = "<svg class='ui-icon' viewBox='0 0 24 24' aria-hidden='true'><path d='M18 6 6 18M6 6l12 12'/></svg> Nenhuma regra ou código encontrado com esse termo.";
                 msgVazio.style.color = "#e74c3c";
                 return;
             }
